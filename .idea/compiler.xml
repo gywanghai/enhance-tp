@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile default="true" name="Default" enabled="true" />
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="enhance-tp-adapter" />
+        <module name="enhance-tp-common" />
+        <module name="enhance-tp-logging" />
+        <module name="enhance-tp-core" />
+        <module name="enhance-tp-example" />
+        <module name="enhance-tp-starter" />
+      </profile>
+    </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="enhance-tp" target="1.8" />
+      <module name="enhance-tp-adapter" target="1.8" />
+      <module name="enhance-tp-common" target="1.8" />
+      <module name="enhance-tp-core" target="1.8" />
+      <module name="enhance-tp-example" target="1.8" />
+      <module name="enhance-tp-logging" target="1.8" />
+      <module name="enhance-tp-starter" target="1.8" />
+    </bytecodeTargetLevel>
+  </component>
+</project>
