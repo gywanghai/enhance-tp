@@ -1,6 +1,0 @@
-com.ocean.enhancetp.core.alarm.BlockingQueueSizeAlarmHandlerFactory
-com.ocean.enhancetp.core.alarm.ConfigUpdateAlarmHandlerFactory
-com.ocean.enhancetp.core.alarm.RejectedExecutionAlarmHandlerFactory
-com.ocean.enhancetp.core.alarm.TaskExecutionTimeoutAlarmHandlerFactory
-com.ocean.enhancetp.core.alarm.TaskFailAlramHandlerFactory
-com.ocean.enhancetp.core.alarm.ThreadPoolLivenessAlarmHandlerFactory
