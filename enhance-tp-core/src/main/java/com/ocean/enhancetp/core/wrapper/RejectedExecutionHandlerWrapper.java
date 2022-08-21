@@ -36,8 +36,6 @@ public class RejectedExecutionHandlerWrapper implements RejectedExecutionHandler
     public RejectedExecutionHandlerWrapper(RejectedExecutionHandler rejectedExecutionHandler, ThreadPoolExecutorProperties threadPoolExecutorProperties ){
         this.rejectedExecutionHandler = rejectedExecutionHandler;
         this.threadPoolId = threadPoolExecutorProperties.getThreadPoolId();
-        this.application = threadPoolExecutorProperties.getApplication();
-        this.namespace = threadPoolExecutorProperties.getNamespace();
     }
 
     @Override
@@ -47,8 +45,6 @@ public class RejectedExecutionHandlerWrapper implements RejectedExecutionHandler
         rejectedExecutionRecord.setRunnableClassName(r.getClass().getName());
 
         AlarmInfo alarmInfo = new AlarmInfo();
-        alarmInfo.setApplication(application);
-        alarmInfo.setNamespace(namespace);
         alarmInfo.setThreadPoolId(threadPoolId);
         alarmInfo.setAlarmType(AlarmType.TASK_REJECTED);
         alarmInfo.setDate(new Date());

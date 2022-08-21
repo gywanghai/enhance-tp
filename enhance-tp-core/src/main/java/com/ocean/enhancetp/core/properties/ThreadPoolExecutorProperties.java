@@ -1,6 +1,5 @@
 package com.ocean.enhancetp.core.properties;
 
-import com.ocean.enhancetp.core.wrapper.ThreadPoolExecutorWrapper;
 import lombok.Data;
 import lombok.ToString;
 
@@ -17,14 +16,6 @@ import java.util.concurrent.ThreadPoolExecutor;
 @Data
 @ToString
 public class ThreadPoolExecutorProperties {
-    /**
-     * 命令空间，用于环境隔离
-     */
-    private String namespace;
-    /**
-     * 应用名称
-     */
-    private String application;
     /**
      * 线程池 ID
      */

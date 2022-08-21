@@ -31,8 +31,6 @@ public class DefaultThreadPoolExecutorAlarmer extends AbstractThreadPoolExecutor
             alarmInfo.setAlarmType(AlarmType.THREADPOOL_LIVENESS);
             alarmInfo.setDate(new Date());
             alarmInfo.setThreadPoolId(properties.getThreadPoolId());
-            alarmInfo.setNamespace(properties.getNamespace());
-            alarmInfo.setApplication(alarmInfo.getApplication());
             alarmInfo.setData(threadPoolExecutorMetrics);
             list.add(alarmInfo);
         }
@@ -46,8 +44,6 @@ public class DefaultThreadPoolExecutorAlarmer extends AbstractThreadPoolExecutor
             alarmInfo.setAlarmType(AlarmType.BLOCKING_QUEUE_SIZE);
             alarmInfo.setDate(new Date());
             alarmInfo.setThreadPoolId(properties.getThreadPoolId());
-            alarmInfo.setNamespace(properties.getNamespace());
-            alarmInfo.setApplication(alarmInfo.getApplication());
             alarmInfo.setData(threadPoolExecutorMetrics);
             list.add(alarmInfo);
         }

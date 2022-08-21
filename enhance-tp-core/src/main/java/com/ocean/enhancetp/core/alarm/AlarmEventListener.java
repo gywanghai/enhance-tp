@@ -1,6 +1,5 @@
 package com.ocean.enhancetp.core.alarm;
 
-import cn.hutool.core.annotation.AnnotationUtil;
 import cn.hutool.core.util.ServiceLoaderUtil;
 import com.ocean.enhancetp.common.event.Event;
 import com.ocean.enhancetp.common.event.EventListener;
@@ -8,7 +7,6 @@ import com.ocean.enhancetp.common.spi.SpiOrder;
 import com.ocean.enhancetp.core.service.ThreadPoolExecutorService;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.xml.ws.Service;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -42,19 +40,15 @@ public class AlarmEventListener implements EventListener<AlarmInfo> {
             return;
         }
         // 按 SpiOrder 排序，对于每一种 AlarmType来说，SpiOrder 序号大的生效
-        Collections.sort(list, new Comparator<AlarmEventHandlerFactory>() {
-            @Override
-            public int compare(AlarmEventHandlerFactory o1, AlarmEventHandlerFactory o2) {
-                SpiOrder spiOrder1 = o1.getClass().getAnnotation(SpiOrder.class);
-                SpiOrder spiOrder2 = o2.getClass().getAnnotation(SpiOrder.class);
-                int order1 = spiOrder1 != null? spiOrder1.order() : 0;
-                int order2 = spiOrder2 != null? spiOrder2.order() : 0;
-                return order1 - order2;
-            }
+        Collections.sort(list, (o1, o2) -> {
+            SpiOrder spiOrder1 = o1.getClass().getAnnotation(SpiOrder.class);
+            SpiOrder spiOrder2 = o2.getClass().getAnnotation(SpiOrder.class);
+            int order1 = spiOrder1 != null? spiOrder1.order() : 0;
+            int order2 = spiOrder2 != null? spiOrder2.order() : 0;
+            return order1 - order2;
         });
-        list.stream().forEach(alarmEventHandlerFactory -> {
-            this.alarmEventHandlerFactoryMap.put(alarmEventHandlerFactory.alarmType(), alarmEventHandlerFactory.getAlarmEventHandler());
-        });
+        list.stream().forEach(alarmEventHandlerFactory -> this.alarmEventHandlerFactoryMap.put(alarmEventHandlerFactory.alarmType(),
+                alarmEventHandlerFactory.getAlarmEventHandler()));
     }
 
     @Override

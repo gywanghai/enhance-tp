@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: example
+
+server:
+  port: 8888
+
+management:
+  endpoints:
+    prometheus:
+      enable: true
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always

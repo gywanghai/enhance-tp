@@ -1,21 +1,14 @@
 package com.ocean.enhancetp.core.service.impl;
 
-import cn.hutool.core.thread.NamedThreadFactory;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.ServiceLoaderUtil;
+import com.ocean.enhancetp.common.event.DefaultEventPublisher;
 import com.ocean.enhancetp.common.event.Event;
 import com.ocean.enhancetp.common.event.EventContext;
 import com.ocean.enhancetp.common.event.EventPublisher;
-import com.ocean.enhancetp.common.event.DefaultEventPublisher;
-import com.ocean.enhancetp.core.alarm.AlarmInfo;
-import com.ocean.enhancetp.core.alarm.AlarmType;
-import com.ocean.enhancetp.core.alarm.DefaultThreadPoolExecutorAlarmer;
-import com.ocean.enhancetp.core.alarm.ThreadPoolExecutorAlarmer;
-import com.ocean.enhancetp.core.alarm.AlarmEventListener;
+import com.ocean.enhancetp.core.alarm.*;
 import com.ocean.enhancetp.core.event.EventSource;
-import com.ocean.enhancetp.core.monitor.DefaultThreadPoolExecutorMonitor;
 import com.ocean.enhancetp.core.monitor.ThreadPoolExecutorMetrics;
-import com.ocean.enhancetp.core.monitor.ThreadPoolExecutorMonitor;
 import com.ocean.enhancetp.core.properties.ThreadPoolExecutorProperties;
 import com.ocean.enhancetp.core.service.ThreadPoolExecutorService;
 import com.ocean.enhancetp.core.vo.UpdateRecordVO;
@@ -23,12 +16,9 @@ import com.ocean.enhancetp.core.wrapper.ThreadPoolExecutorWrapper;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Date;
-import java.util.Map;
-import java.util.Optional;
-import java.util.ServiceLoader;
-import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * @description:
@@ -42,23 +32,13 @@ public class ThreadPoolExecutorServiceImpl implements ThreadPoolExecutorService 
 
     private Map<String, ThreadPoolExecutorWrapper> threadPoolExecutorWrapperMap = new ConcurrentHashMap<>();
 
-    private ScheduledExecutorService monitorExecutorService;
-
     private EventPublisher eventPublisher;
 
-    private ThreadPoolExecutorMonitor threadPoolExecutorMonitor;
-
     private ThreadPoolExecutorAlarmer threadPoolExecutorAlarmer;
-    /**
-     * 是否开启监控
-     */
-    private AtomicBoolean monitor = new AtomicBoolean(false);
 
     public ThreadPoolExecutorServiceImpl(){
         // 初始化事件监听器
         initEventPublisher();
-        // 初始化线程池监控器
-        initMonitor();
         // 初始化线程池报警器
         initAlarmer();
     }
@@ -70,19 +50,6 @@ public class ThreadPoolExecutorServiceImpl implements ThreadPoolExecutorService 
         }
         else {
             this.threadPoolExecutorAlarmer = alarmer;
-        }
-    }
-
-    private void initMonitor() {
-        monitorExecutorService = Executors.newScheduledThreadPool(1, new NamedThreadFactory(
-                "enhance-tp-monitor-", false
-        ));
-        ThreadPoolExecutorMonitor monitor = ServiceLoaderUtil.loadFirst(ThreadPoolExecutorMonitor.class);
-        if(threadPoolExecutorMonitor == null){
-            this.threadPoolExecutorMonitor = new DefaultThreadPoolExecutorMonitor();
-        }
-        else {
-            this.threadPoolExecutorMonitor = monitor;
         }
     }
 
@@ -118,20 +85,11 @@ public class ThreadPoolExecutorServiceImpl implements ThreadPoolExecutorService 
 
         AlarmInfo alarmInfo = new AlarmInfo();
         alarmInfo.setThreadPoolId(threadPoolExecutorProperties.getThreadPoolId());
-        alarmInfo.setApplication(threadPoolExecutorProperties.getApplication());
-        alarmInfo.setNamespace(threadPoolExecutorProperties.getNamespace());
         alarmInfo.setDate(new Date());
         alarmInfo.setData(new UpdateRecordVO(executorWrapper.getProperties(), threadPoolExecutorProperties));
         alarmInfo.setAlarmType(AlarmType.CONFIG_UPDATE);
 
         eventPublisher.publishEvent(new Event<AlarmInfo>(IdUtil.nanoId(), EventSource.ALARM.name(), alarmInfo ,new Date()));
-    }
-
-    @Override
-    public void startMonitor() {
-        if(monitor.compareAndSet(false, true)){
-            monitorExecutorService.submit(new MonitorTask());
-        }
     }
 
     @Override
@@ -174,21 +132,13 @@ public class ThreadPoolExecutorServiceImpl implements ThreadPoolExecutorService 
         }
     }
 
+    @Override
+    public Collection<ThreadPoolExecutorWrapper> getAllThreadPoolExecutorWrapper() {
+        return threadPoolExecutorWrapperMap.values();
+    }
+
     public void destroy(){
         log.info("关闭所有线程池");
         threadPoolExecutorWrapperMap.entrySet().stream().forEach(wrapperEntry -> wrapperEntry.getValue().destory());
-        this.monitorExecutorService.shutdown();
-    }
-
-    class MonitorTask implements Runnable {
-        @Override
-        public void run() {
-            threadPoolExecutorWrapperMap.values().stream().forEach(threadPoolExecutorWrapper -> {
-                threadPoolExecutorWrapper.scrapeMetrics();
-                threadPoolExecutorMonitor.monitor(threadPoolExecutorWrapper.getMetrics());
-                threadPoolExecutorAlarmer.alarm(threadPoolExecutorWrapper.getMetrics(), threadPoolExecutorWrapper.getProperties());
-            });
-            monitorExecutorService.schedule(this, 5, TimeUnit.SECONDS);
-        }
     }
 }

@@ -11,9 +11,10 @@
 
     <artifactId>enhance-tp-starter</artifactId>
 
-    <properties>
-        <maven.compiler.source>8</maven.compiler.source>
-        <maven.compiler.target>8</maven.compiler.target>
-    </properties>
+    <packaging>pom</packaging>
+
+    <modules>
+        <module>enhance-tp-core-spring-boot-starter</module>
+    </modules>
 
 </project>

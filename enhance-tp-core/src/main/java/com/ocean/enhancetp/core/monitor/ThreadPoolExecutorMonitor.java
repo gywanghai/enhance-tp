@@ -8,6 +8,11 @@ package com.ocean.enhancetp.core.monitor;
  */
 public interface ThreadPoolExecutorMonitor {
 
+    /**
+     * 开启监控
+     */
+    public void startMonitor();
+
     public void monitor(ThreadPoolExecutorMetrics metrics);
 
 }

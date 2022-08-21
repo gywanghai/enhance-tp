@@ -3,6 +3,7 @@ package com.ocean.enhancetp.core.service;
 import com.ocean.enhancetp.core.properties.ThreadPoolExecutorProperties;
 import com.ocean.enhancetp.core.wrapper.ThreadPoolExecutorWrapper;
 
+import java.util.Collection;
 import java.util.concurrent.ThreadPoolExecutor;
 
 /**
@@ -32,12 +33,6 @@ public interface ThreadPoolExecutorService {
      * @param threadPoolExecutorProperties 线程池参数
      */
     public void update(String threadPoolId, ThreadPoolExecutorProperties threadPoolExecutorProperties);
-
-    /**
-     * 开启监控
-     */
-    public void startMonitor();
-
     /**
      * 获取线程池
      * @param executor 线程池
@@ -61,4 +56,10 @@ public interface ThreadPoolExecutorService {
      * @param threadPoolId
      */
     void increaseExecTimeoutCount(String threadPoolId);
+
+    /**
+     * 获取所有线程池包装器
+     * @return
+     */
+    Collection<ThreadPoolExecutorWrapper> getAllThreadPoolExecutorWrapper();
 }

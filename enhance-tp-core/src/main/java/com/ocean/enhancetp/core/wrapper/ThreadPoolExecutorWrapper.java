@@ -49,7 +49,7 @@ public class ThreadPoolExecutorWrapper {
         buildThreadExecutor(properties);
 
         metrics = new ThreadPoolExecutorMetrics();
-        initMetrics(properties.getNamespace(), properties.getApplication(), properties.getThreadPoolId());
+        initMetrics(properties.getThreadPoolId());
     }
 
     /**
@@ -59,25 +59,21 @@ public class ThreadPoolExecutorWrapper {
      * @param application
      * @param threadPoolId
      */
-    public ThreadPoolExecutorWrapper(ThreadPoolExecutor threadPoolExecutor, String namespace, String application, String threadPoolId){
+    public ThreadPoolExecutorWrapper(ThreadPoolExecutor threadPoolExecutor, String threadPoolId){
         executor = threadPoolExecutor;
         properties = new ThreadPoolExecutorProperties();
-        properties.setNamespace(namespace);
         properties.setThreadPoolId(threadPoolId);
-        properties.setApplication(application);
         properties.setClassName(threadPoolExecutor.getClass().getName());
 
         initProperties(threadPoolExecutor);
 
         metrics = new ThreadPoolExecutorMetrics();
-        initMetrics(namespace, application, threadPoolId);
+        initMetrics(threadPoolId);
 
         executor.setRejectedExecutionHandler(new RejectedExecutionHandlerWrapper(executor.getRejectedExecutionHandler(), properties));
     }
 
-    private void initMetrics(String namespace, String application, String threadPoolId) {
-        metrics.setNamespace(namespace);
-        metrics.setApplication(application);
+    private void initMetrics(String threadPoolId) {
         metrics.setThreadPoolId(threadPoolId);
         metrics.setRejectedCount(new AtomicLong(0));
         metrics.setExecuteFailCount(new AtomicLong(0));
@@ -137,7 +133,7 @@ public class ThreadPoolExecutorWrapper {
      * @param properties
      */
     private void buildScheduledThreadPool(ThreadPoolExecutorProperties properties) {
-        String prefix = properties.getNamespace() + "-" + properties.getApplication() + "-" + properties.getThreadPoolId() + "-";
+        String prefix = properties.getThreadPoolId() + "-";
         ThreadFactory threadFactory = new NamedThreadFactory(prefix, false);
         this.executor = new ScheduledThreadPoolExecutor(properties.getCorePoolSize(), threadFactory);
     }
@@ -155,12 +151,13 @@ public class ThreadPoolExecutorWrapper {
         BlockingQueue workQueue = buildBlockingQueue(properties);
 
 
-        String prefix = properties.getNamespace() + "-" + properties.getApplication() + "-" + properties.getThreadPoolId() + "-";
+        String prefix = properties.getThreadPoolId() + "-";
         ThreadFactory threadFactory = new NamedThreadFactory(prefix, false);
 
         RejectedExecutionHandler handler = buildRejectedExecutionHandler(properties);
 
         this.executor = new ThreadPoolExecutor(corePoolSize, maximumPoolSize, keepAliveTime,timeUnit, workQueue, threadFactory, handler);
+        this.executor.allowCoreThreadTimeOut(properties.getAllowCoreThreadTimeOut());
     }
 
     public RejectedExecutionHandler buildRejectedExecutionHandler(ThreadPoolExecutorProperties properties){
@@ -179,7 +176,7 @@ public class ThreadPoolExecutorWrapper {
 
     public BlockingQueue buildBlockingQueue(ThreadPoolExecutorProperties properties)  {
         String workQueueClassName = properties.getWorkQueueClassName();
-        Class workQueueClass =  ClassUtil.loadClass(workQueueClassName);
+        Class<?> workQueueClass =  ClassUtil.loadClass(workQueueClassName);
         BlockingQueue workQueue = null;
         if(SynchronousQueue.class.isAssignableFrom(workQueueClass) || PriorityBlockingQueue.class.isAssignableFrom(workQueueClass) || LinkedTransferQueue.class.isAssignableFrom(workQueueClass)){
             try {
@@ -273,9 +270,7 @@ public class ThreadPoolExecutorWrapper {
         if(threadPoolExecutorProperties.getKeepAliveTime() != null){
             executor.setKeepAliveTime(threadPoolExecutorProperties.getKeepAliveTime(), TimeUnit.SECONDS);
         }
-        String prefix = threadPoolExecutorProperties.getNamespace() + "-" +
-                threadPoolExecutorProperties.getApplication() + "-" +
-                threadPoolExecutorProperties.getThreadPoolId() + "-";
+        String prefix = threadPoolExecutorProperties.getThreadPoolId() + "-";
         executor.setThreadFactory(new NamedThreadFactory(prefix, false));
         executor.allowCoreThreadTimeOut(threadPoolExecutorProperties.getAllowCoreThreadTimeOut());
         updateRejectedExecutionHandler(threadPoolExecutorProperties);

@@ -1,19 +1,21 @@
 package com.ocean.enhancetp.example;
 
 import cn.hutool.core.thread.NamedThreadFactory;
-import cn.hutool.core.thread.RejectPolicy;
-import cn.hutool.json.JSONUtil;
 import com.alibaba.ttl.TransmittableThreadLocal;
 import com.ocean.enhancetp.core.alarm.AlarmType;
 import com.ocean.enhancetp.core.blockingqueue.ResizableLinkedBlockingQueue;
+import com.ocean.enhancetp.core.context.RunnableContext;
+import com.ocean.enhancetp.core.monitor.SimpleThreadPoolExecutorMonitor;
+import com.ocean.enhancetp.core.monitor.ThreadPoolExecutorMonitor;
 import com.ocean.enhancetp.core.properties.ThreadPoolExecutorProperties;
 import com.ocean.enhancetp.core.service.ThreadPoolExecutorService;
 import com.ocean.enhancetp.core.service.impl.ThreadPoolExecutorServiceImpl;
 import com.ocean.enhancetp.core.wrapper.RunnableWrapper;
 import com.ocean.enhancetp.core.wrapper.ThreadPoolExecutorWrapper;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.LinkedHashMap;
+import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -41,7 +43,7 @@ public class ThreadPoolExecutorWrapperTest {
         ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(1, 1, 60,
                 TimeUnit.SECONDS,
                 new ResizableLinkedBlockingQueue<>(65535), new NamedThreadFactory("test-pool-", false));
-        ThreadPoolExecutorWrapper threadPoolExecutorWrapper = new ThreadPoolExecutorWrapper(threadPoolExecutor, namespace, application, threadPoolId);
+        ThreadPoolExecutorWrapper threadPoolExecutorWrapper = new ThreadPoolExecutorWrapper(threadPoolExecutor, threadPoolId);
 
         threadPoolExecutorWrapper.setAlarmThreshold(AlarmType.BLOCKING_QUEUE_SIZE.name(), 1);
         threadPoolExecutorWrapper.setAlarmThreshold(AlarmType.THREADPOOL_LIVENESS.name(), 1);
@@ -49,7 +51,11 @@ public class ThreadPoolExecutorWrapperTest {
 
         ThreadPoolExecutorService threadPoolExecutorService = new ThreadPoolExecutorServiceImpl();
         threadPoolExecutorService.registerThreadPoolExecutorWrapper(threadPoolExecutorWrapper);
-        threadPoolExecutorService.startMonitor();
+
+        ThreadPoolExecutorMonitor threadPoolExecutorMonitor = new SimpleThreadPoolExecutorMonitor(new SimpleMeterRegistry(),
+                threadPoolExecutorService);
+        threadPoolExecutorMonitor.startMonitor();
+
         ThreadPoolExecutorProperties newProperties = threadPoolExecutorWrapper.getProperties();
         newProperties.setCorePoolSize(4);
         newProperties.setMaximumPoolSize(4);
@@ -58,8 +64,8 @@ public class ThreadPoolExecutorWrapperTest {
 
         threadPoolExecutorService.update(threadPoolId, newProperties);
 
-        TransmittableThreadLocal<ThreadPoolExecutorWrapper> context = new TransmittableThreadLocal<>();
-        context.set(threadPoolExecutorWrapper);
+        TransmittableThreadLocal<RunnableContext> context = new TransmittableThreadLocal<>();
+        context.set(new RunnableContext(threadPoolExecutorWrapper, new Date()));
         for (int i = 0; i < 1000; i++){
             threadPoolExecutor.submit(new RunnableWrapper(new Runnable() {
                 @Override
@@ -80,17 +86,15 @@ public class ThreadPoolExecutorWrapperTest {
         String application = "test";
         String threadPoolId = "test2";
         ThreadPoolExecutorProperties threadPoolExecutorProperties = new ThreadPoolExecutorProperties();
-        threadPoolExecutorProperties.setApplication(application);
-        threadPoolExecutorProperties.setNamespace(namespace);
         threadPoolExecutorProperties.setThreadPoolId(threadPoolId);
         threadPoolExecutorProperties.setClassName(ThreadPoolExecutor.class.getName());
         threadPoolExecutorProperties.setRejectedExecutionHandlerClassName(ThreadPoolExecutor.DiscardOldestPolicy.class.getName());
         threadPoolExecutorProperties.setWorkQueueClassName(ResizableLinkedBlockingQueue.class.getName());
         threadPoolExecutorProperties.setKeepAliveTime(60L);
-        threadPoolExecutorProperties.setWorkQueueCapacity(1);
+        threadPoolExecutorProperties.setWorkQueueCapacity(65535);
         threadPoolExecutorProperties.setAllowCoreThreadTimeOut(false);
-        threadPoolExecutorProperties.setCorePoolSize(1);
-        threadPoolExecutorProperties.setMaximumPoolSize(1);
+        threadPoolExecutorProperties.setCorePoolSize(8);
+        threadPoolExecutorProperties.setMaximumPoolSize(16);
 
         Map<String, Number> alarmThreshold = new ConcurrentHashMap<>();
         alarmThreshold.put(AlarmType.BLOCKING_QUEUE_SIZE.name(), 1000);
@@ -103,20 +107,24 @@ public class ThreadPoolExecutorWrapperTest {
 
         ThreadPoolExecutorService threadPoolExecutorService = new ThreadPoolExecutorServiceImpl();
         threadPoolExecutorService.registerThreadPoolExecutorWrapper(threadPoolExecutorWrapper);
-        threadPoolExecutorService.startMonitor();
 
-        TransmittableThreadLocal<ThreadPoolExecutorWrapper> context = new TransmittableThreadLocal<>();
-        context.set(threadPoolExecutorWrapper);
+        ThreadPoolExecutorMonitor threadPoolExecutorMonitor = new SimpleThreadPoolExecutorMonitor(new SimpleMeterRegistry(),
+                threadPoolExecutorService);
+        threadPoolExecutorMonitor.startMonitor();
 
-        for (int i = 0; i < 1000; i++){
+        TransmittableThreadLocal<RunnableContext> context = new TransmittableThreadLocal<>();
+        context.set(new RunnableContext(threadPoolExecutorWrapper, new Date()));
+
+        for (int i = 0; i < 100; i++){
             threadPoolExecutorWrapper.getExecutor().submit(new RunnableWrapper(new Runnable() {
                 @Override
                 public void run() {
-                    System.out.println(context.get());
+                    context.get();
+//                    System.out.println(context.get());
                 }
             },context));
             try {
-                Thread.sleep(10);
+                Thread.sleep(100);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }

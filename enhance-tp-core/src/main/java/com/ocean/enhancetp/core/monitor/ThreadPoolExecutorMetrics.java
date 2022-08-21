@@ -15,14 +15,6 @@ import java.util.concurrent.atomic.AtomicLong;
 @ToString
 public class ThreadPoolExecutorMetrics {
     /**
-     * 应用名称
-     */
-    private String application;
-    /**
-     * 命名空间，用于环境隔离
-     */
-    private String namespace;
-    /**
      * 线程池 ID
      */
     private String threadPoolId;

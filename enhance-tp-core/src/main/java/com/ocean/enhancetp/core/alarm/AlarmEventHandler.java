@@ -1,6 +1,5 @@
 package com.ocean.enhancetp.core.alarm;
 
-import com.ocean.enhancetp.core.alarm.AlarmInfo;
 import com.ocean.enhancetp.core.service.ThreadPoolExecutorService;
 
 /**

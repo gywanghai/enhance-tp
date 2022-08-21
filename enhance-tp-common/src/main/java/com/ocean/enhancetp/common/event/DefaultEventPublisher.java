@@ -1,8 +1,6 @@
 package com.ocean.enhancetp.common.event;
 
 import cn.hutool.core.thread.NamedThreadFactory;
-import com.google.common.eventbus.AsyncEventBus;
-import com.google.common.eventbus.EventBus;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -18,11 +16,11 @@ import java.util.concurrent.LinkedBlockingQueue;
  */
 public class DefaultEventPublisher implements EventPublisher {
 
-    private LinkedBlockingQueue<Event> eventLinkedBlockingQueue = new LinkedBlockingQueue<>(65535);
+    private LinkedBlockingQueue<Event<?>> eventLinkedBlockingQueue = new LinkedBlockingQueue<>(65535);
 
     private Map<String, EventListener> eventListenerMap = new ConcurrentHashMap<>();
 
-    public ExecutorService executorService = Executors.newSingleThreadExecutor(
+    private ExecutorService executorService = Executors.newSingleThreadExecutor(
             new NamedThreadFactory("event-dispatcher", false));
 
     public DefaultEventPublisher(){
@@ -31,7 +29,7 @@ public class DefaultEventPublisher implements EventPublisher {
             public void run() {
                 while (true){
                     try {
-                        Event event = eventLinkedBlockingQueue.take();
+                        Event<?> event = eventLinkedBlockingQueue.take();
                         EventListener eventListener = eventListenerMap.get(event.getSource());
                         if(eventListener != null){
                             eventListener.onMessage(event);

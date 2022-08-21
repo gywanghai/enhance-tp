@@ -10,24 +10,22 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>enhance-tp-example</artifactId>
+    <packaging>pom</packaging>
+    <modules>
+        <module>enhance-tp-example-core</module>
+        <module>enhance-tp-spring-boot-example</module>
+    </modules>
 
-    <dependencies>
+    <dependencyManagement>
+        <dependencies>
 
-        <dependency>
-            <groupId>com.ocean</groupId>
-            <artifactId>enhance-tp-core</artifactId>
-        </dependency>
+            <dependency>
+                <groupId>com.ocean</groupId>
+                <artifactId>enhance-tp-core-spring-boot-starter</artifactId>
+                <version>${project.version}</version>
+            </dependency>
 
-    </dependencies>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>3.2.2</version>
-            </plugin>
-        </plugins>
-    </build>
+        </dependencies>
+    </dependencyManagement>
 
 </project>

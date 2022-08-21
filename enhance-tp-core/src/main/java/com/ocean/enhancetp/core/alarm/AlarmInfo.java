@@ -15,14 +15,6 @@ import java.util.Date;
 @ToString
 public class AlarmInfo {
     /**
-     * 应用名
-     */
-    private String application;
-    /**
-     * 命名空间
-     */
-    private String namespace;
-    /**
      * 线程池ID
      */
     private String threadPoolId;

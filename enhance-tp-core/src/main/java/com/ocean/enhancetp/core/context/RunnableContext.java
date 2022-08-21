@@ -1,0 +1,23 @@
+package com.ocean.enhancetp.core.context;
+
+import com.ocean.enhancetp.core.wrapper.ThreadPoolExecutorWrapper;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+
+import java.util.Date;
+
+/**
+ * @description:
+ * @author：二师兄，微信：happy_coder
+ * @date: 2022/8/21
+ * @Copyright： 公众号：海哥聊架构 | 博客：https://gywanghai.github.io/technote/ - 沉淀、分享、成长，让自己和他人都能有所收获！
+ */
+@Data
+@AllArgsConstructor
+public class RunnableContext {
+
+    private ThreadPoolExecutorWrapper threadPoolExecutorWrapper;
+
+    private Date submitDate;
+
+}
