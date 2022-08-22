@@ -66,4 +66,8 @@ public class ThreadPoolExecutorMetrics {
      * 任务执行失败次数
      */
     private AtomicLong executeFailCount;
+    /**
+     * 等待超时次数
+     */
+    private AtomicLong waitTimeoutCount;
 }

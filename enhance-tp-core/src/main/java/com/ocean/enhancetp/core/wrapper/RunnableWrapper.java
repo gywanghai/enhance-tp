@@ -2,19 +2,25 @@ package com.ocean.enhancetp.core.wrapper;
 
 import cn.hutool.core.exceptions.ExceptionUtil;
 import cn.hutool.core.util.IdUtil;
-import com.alibaba.ttl.TransmittableThreadLocal;
 import com.ocean.enhancetp.common.event.Event;
 import com.ocean.enhancetp.common.event.EventContext;
 import com.ocean.enhancetp.core.alarm.AlarmInfo;
 import com.ocean.enhancetp.core.alarm.AlarmType;
-import com.ocean.enhancetp.core.context.RunnableContext;
 import com.ocean.enhancetp.core.event.EventSource;
 import com.ocean.enhancetp.core.properties.ThreadPoolExecutorProperties;
-import com.ocean.enhancetp.core.vo.ExecutionFailRecordVO;
-import com.ocean.enhancetp.core.vo.ExecutionTimeVO;
+import com.ocean.enhancetp.core.vo.ExecFailRecordVO;
+import com.ocean.enhancetp.core.vo.ExecTimeRecordVO;
+import com.ocean.enhancetp.core.vo.WaitTimeRecordVO;
+import io.micrometer.core.instrument.Metrics;
+import io.micrometer.core.instrument.Tag;
+import io.micrometer.core.instrument.Tags;
+import io.micrometer.core.instrument.Timer;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.time.StopWatch;
 
+import java.time.Duration;
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @description: 任务装饰类
@@ -27,56 +33,104 @@ public class RunnableWrapper implements Runnable {
 
     private Runnable target;
 
-    private TransmittableThreadLocal<RunnableContext> context;
+    private ThreadPoolExecutorWrapper threadPoolExecutorWrapper;
 
-    public RunnableWrapper(Runnable target, TransmittableThreadLocal<RunnableContext> context){
+    private Date submitDate;
+
+    public RunnableWrapper(ThreadPoolExecutorWrapper threadPoolExecutorWrapper, Runnable target){
         this.target = target;
-        this.context = context;
+        this.threadPoolExecutorWrapper = threadPoolExecutorWrapper;
+        this.submitDate = new Date();
+    }
+
+    public void setSubmitDate(Date submitDate) {
+        this.submitDate = submitDate;
     }
 
     @Override
     public void run() {
         if(target != null){
-            RunnableContext runnableContext = context!= null ? context.get(): null;
-            ThreadPoolExecutorWrapper threadPoolExecutorWrapper = (runnableContext!= null) ? runnableContext.getThreadPoolExecutorWrapper(): null;
-            ThreadPoolExecutorProperties properties = threadPoolExecutorWrapper == null ? null : threadPoolExecutorWrapper.getProperties();
-            long start = System.currentTimeMillis();
-            try {
-                target.run();
-                long end = System.currentTimeMillis();
-                long mills = end - start;
-                if(threadPoolExecutorWrapper != null){
-                    ExecutionTimeVO executionTimeVO = new ExecutionTimeVO(target.getClass().getName(), mills);
-                    // 发布执行时间统计事件
-                    AlarmInfo alarmInfo = buildAlarmInfo(properties, executionTimeVO);
-                    EventContext.publishEvent(new Event<>(IdUtil.nanoId(), EventSource.ALARM.name(), alarmInfo, new Date()));
-                }
-            }
-            catch (Exception e){
-                log.error(e.getMessage(), e);
-                // 发布任务执行失败事件
-                if(properties != null){
-                    AlarmInfo alarmInfo = new AlarmInfo();
-                    alarmInfo.setAlarmType(AlarmType.TASK_FAIL);
-                    alarmInfo.setThreadPoolId(properties.getThreadPoolId());
-                    alarmInfo.setDate(new Date());
-
-                    ExecutionFailRecordVO executionFailRecordVO = new ExecutionFailRecordVO(target.getClass().getName(),
-                            ExceptionUtil.stacktraceToString(e));
-                    alarmInfo.setData(executionFailRecordVO);
-
-                    EventContext.publishEvent(new Event<>(IdUtil.nanoId(), EventSource.ALARM.name(), alarmInfo, new Date()));
-                }
-            }
+            Timer.builder("threadpool.exec.time")
+                    .tags(Tags.of(Tag.of("threadPoolId", threadPoolExecutorWrapper.getProperties().getThreadPoolId())))
+                    .publishPercentiles(0.5,0.9,0.95,0.99)
+                    .publishPercentileHistogram()
+                    .serviceLevelObjectives(Duration.ofMillis(100))
+                    .minimumExpectedValue(Duration.ofMillis(1))
+                    .maximumExpectedValue(Duration.ofMinutes(30))
+                    .register(Metrics.globalRegistry)
+                    .record(() -> {
+                        StopWatch stopwatch = new StopWatch();
+                        stopwatch.start();
+                        try {
+                            checkWithQueuedTime(threadPoolExecutorWrapper);
+                            target.run();
+                        }catch (Exception e){
+                            log.error(e.getMessage(), e);
+                            // 发布任务执行失败事件
+                            AlarmInfo alarmInfo = buildExecFailAlarm(threadPoolExecutorWrapper.getProperties(), e);
+                            EventContext.publishEvent(new Event<>(IdUtil.nanoId(), EventSource.ALARM.name(), alarmInfo, new Date()));
+                        }finally {
+                            stopwatch.stop();
+                            long mills = stopwatch.getTime(TimeUnit.MILLISECONDS);
+                            ExecTimeRecordVO executionTimeVO = new ExecTimeRecordVO(target.getClass().getName(), mills);
+                            // 发布执行时间统计事件
+                            AlarmInfo alarmInfo = buildAlarmInfo(threadPoolExecutorWrapper.getProperties(), executionTimeVO);
+                            EventContext.publishEvent(new Event<>(IdUtil.nanoId(), EventSource.ALARM.name(), alarmInfo, new Date()));
+                        }
+                    });
         }
     }
 
-    private AlarmInfo buildAlarmInfo(ThreadPoolExecutorProperties properties, ExecutionTimeVO executionTimeVO) {
+    /**
+     * 检查任务等待时间
+     * *
+     * @param threadPoolExecutorWrapper
+     */
+    private void checkWithQueuedTime(ThreadPoolExecutorWrapper threadPoolExecutorWrapper) {
+        long queueTime = System.currentTimeMillis() - submitDate.getTime();
+        if(threadPoolExecutorWrapper != null){
+            WaitTimeRecordVO waitTimeRecordVO = new WaitTimeRecordVO(target.getClass().getName(), queueTime);
+            // 记录
+            Timer.builder("threadpool.wait.time").tags("threadPoolId", threadPoolExecutorWrapper.getProperties().getThreadPoolId())
+                    .publishPercentileHistogram()
+                    .publishPercentiles(0.5,0.9,0.95,0.99)
+                    .serviceLevelObjectives(Duration.ofMillis(100))
+                    .minimumExpectedValue(Duration.ofMillis(1))
+                    .maximumExpectedValue(Duration.ofMinutes(30))
+                    .register(Metrics.globalRegistry).record(waitTimeRecordVO.getTime(), TimeUnit.MILLISECONDS);
+            // 发布任务等待时间时间
+            AlarmInfo alarmInfo = buildWaitTimeAlarmInfo(threadPoolExecutorWrapper.getProperties(), waitTimeRecordVO);
+            EventContext.publishEvent(new Event<>(IdUtil.nanoId(), EventSource.ALARM.name(), alarmInfo, new Date()));
+        }
+    }
+
+    private AlarmInfo buildExecFailAlarm(ThreadPoolExecutorProperties properties, Exception exception) {
+        AlarmInfo alarmInfo = new AlarmInfo();
+        alarmInfo.setAlarmType(AlarmType.TASK_FAIL);
+        alarmInfo.setThreadPoolId(properties.getThreadPoolId());
+        alarmInfo.setDate(new Date());
+
+        ExecFailRecordVO execFailRecordVO = new ExecFailRecordVO(target.getClass().getName(),
+                ExceptionUtil.stacktraceToString(exception));
+        alarmInfo.setData(execFailRecordVO);
+        return alarmInfo;
+    }
+
+    private AlarmInfo buildWaitTimeAlarmInfo(ThreadPoolExecutorProperties properties, WaitTimeRecordVO waitTimeRecordVO) {
+        AlarmInfo alarmInfo = new AlarmInfo();
+        alarmInfo.setAlarmType(AlarmType.WAIT_TIMEOUT);
+        alarmInfo.setThreadPoolId(properties.getThreadPoolId());
+        alarmInfo.setDate(new Date());
+        alarmInfo.setData(waitTimeRecordVO);
+        return alarmInfo;
+    }
+
+    private AlarmInfo buildAlarmInfo(ThreadPoolExecutorProperties properties, ExecTimeRecordVO execTimeVO) {
         AlarmInfo alarmInfo = new AlarmInfo();
         alarmInfo.setAlarmType(AlarmType.TASK_EXECUTION_TIMEOUT);
         alarmInfo.setThreadPoolId(properties.getThreadPoolId());
         alarmInfo.setDate(new Date());
-        alarmInfo.setData(executionTimeVO);
+        alarmInfo.setData(execTimeVO);
         return alarmInfo;
     }
 }

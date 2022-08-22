@@ -24,4 +24,9 @@ public interface EventPublisher {
      * 注销事件监听器
      */
     default  void unregisterEventListener(String source){}
+
+    /**
+     * 停止监听
+     */
+    void stop();
 }

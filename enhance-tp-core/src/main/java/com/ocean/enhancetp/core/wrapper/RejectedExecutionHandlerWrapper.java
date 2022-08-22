@@ -23,10 +23,6 @@ public class RejectedExecutionHandlerWrapper implements RejectedExecutionHandler
 
     private RejectedExecutionHandler rejectedExecutionHandler;
 
-    private String namespace;
-
-    private String application;
-
     private String threadPoolId;
 
     public RejectedExecutionHandler getRejectedExecutionHandler() {
@@ -43,13 +39,16 @@ public class RejectedExecutionHandlerWrapper implements RejectedExecutionHandler
         // 发布任务被拒绝事件
         RejectedExecutionRecordVO rejectedExecutionRecord = new RejectedExecutionRecordVO();
         rejectedExecutionRecord.setRunnableClassName(r.getClass().getName());
+        if(r instanceof RunnableWrapper){
+            rejectedExecutionRecord.setRunnableClassName(((RunnableWrapper)r).getClass().getName());
+        }
 
         AlarmInfo alarmInfo = new AlarmInfo();
         alarmInfo.setThreadPoolId(threadPoolId);
         alarmInfo.setAlarmType(AlarmType.TASK_REJECTED);
         alarmInfo.setDate(new Date());
         alarmInfo.setData(rejectedExecutionRecord);
-        EventContext.publishEvent(new Event<AlarmInfo>(IdUtil.nanoId(), EventSource.ALARM.name(), alarmInfo, new Date()));
+        EventContext.publishEvent(new Event<>(IdUtil.nanoId(), EventSource.ALARM.name(), alarmInfo, new Date()));
         this.rejectedExecutionHandler.rejectedExecution(r, executor);
     }
 }

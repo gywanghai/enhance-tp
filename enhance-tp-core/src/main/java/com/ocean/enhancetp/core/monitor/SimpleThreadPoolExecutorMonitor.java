@@ -1,9 +1,11 @@
 package com.ocean.enhancetp.core.monitor;
 
 import cn.hutool.core.thread.NamedThreadFactory;
+import com.ocean.enhancetp.core.alarm.ThreadPoolExecutorAlarmer;
 import com.ocean.enhancetp.core.service.ThreadPoolExecutorService;
 import com.ocean.enhancetp.core.wrapper.ThreadPoolExecutorWrapper;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.Tag;
 import lombok.extern.slf4j.Slf4j;
 
@@ -12,10 +14,10 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Function;
 
 /**
  * @description: 默认线程池监控器
@@ -33,54 +35,48 @@ public class SimpleThreadPoolExecutorMonitor implements ThreadPoolExecutorMonito
 
     private Map<String, List<Tag>> tagsMap = new ConcurrentHashMap<>();
 
-    private MeterRegistry meterRegistry;
-
     private ThreadPoolExecutorService threadPoolExecutorService;
 
 
-    private ScheduledExecutorService monitorExecutorService;
+    private ScheduledThreadPoolExecutor scheduledThreadPoolExecutor;
 
-    public SimpleThreadPoolExecutorMonitor(MeterRegistry meterRegistry, ThreadPoolExecutorService threadPoolExecutorService){
-        this.meterRegistry = meterRegistry;
+    private ThreadPoolExecutorAlarmer threadPoolExecutorAlarmer;
+
+
+    public SimpleThreadPoolExecutorMonitor(ThreadPoolExecutorService threadPoolExecutorService, ThreadPoolExecutorAlarmer threadPoolExecutorAlarmer){
         this.threadPoolExecutorService = threadPoolExecutorService;
-        this.monitorExecutorService = new ScheduledThreadPoolExecutor(1,
-                new NamedThreadFactory("enhance-tp-monitor",false));
+        this.threadPoolExecutorAlarmer = threadPoolExecutorAlarmer;
+        this.scheduledThreadPoolExecutor = new ScheduledThreadPoolExecutor(1, new NamedThreadFactory("enhance-tp-monitor",false));
     }
 
     @Override
     public void startMonitor() {
         if(monitor.compareAndSet(false, true)){
-            monitorExecutorService.submit(new MonitorTask());
+            scheduledThreadPoolExecutor.submit(new MonitorTask());
         }
     }
 
     @Override
     public void monitor(ThreadPoolExecutorMetrics metrics) {
         log.info("线程池监控信息: {}", metrics);
-//        tagsMap.computeIfAbsent(metrics.getThreadPoolId(), new Function<String, List<Tag>>() {
-//            @Override
-//            public List<Tag> apply(String s) {
-//                List<Tag> tagList = new ArrayList<>();
-//                tagList.add(Tag.of("application", metrics.getApplication()));
-//                tagList.add(Tag.of("namespace", metrics.getNamespace()));
-//                tagList.add(Tag.of("threadPoolId", metrics.getThreadPoolId()));
-//                return tagList;
-//            }
-//        });
-//        List<Tag> tags = tagsMap.get(metrics.getThreadPoolId());
-        List<Tag> tags = new ArrayList<>();
-        tags.add(Tag.of("threadPoolId", metrics.getThreadPoolId()));
-        meterRegistry.gauge("threadpool.core.poolsize", tags, metrics, value -> value.getCorePoolSize());
-        meterRegistry.gauge("threadpool.maximum.poolsize", tags, metrics, value -> value.getPoolSize());
-        meterRegistry.gauge("threadpool.active.count", tags, metrics, value -> value.getActiveCount().longValue());
-        meterRegistry.gauge("threadpool.poolsize", tags, metrics, value -> value.getPoolSize().longValue());
-        meterRegistry.gauge("threadpool.largest.poolsize", tags, metrics, value -> value.getLargestPoolSize().longValue());
-        meterRegistry.gauge("threadpool.completedtask.count", tags, metrics, value -> value.getCompletedTaskCount().longValue());
-        meterRegistry.gauge("threadpool.rejected.count", tags, metrics, value -> value.getRejectedCount().longValue());
-        meterRegistry.gauge("threadpool.fail.count", tags, metrics, value -> value.getExecuteFailCount().longValue());
-        meterRegistry.gauge("threadpool.timeout.count", tags, metrics, value -> value.getExecuteTimeoutCount().longValue());
-        meterRegistry.gauge("threadpool.task.count", tags, metrics, value -> value.getTaskCount().longValue());
-        meterRegistry.gauge("threadpool.queue.size", tags, metrics, value -> value.getWorkQueueSize().longValue());
+        tagsMap.computeIfAbsent(metrics.getThreadPoolId(), s -> {
+            List<Tag> tagList = new ArrayList<>();
+            tagList.add(Tag.of("threadPoolId", metrics.getThreadPoolId()));
+            return tagList;
+        });
+        List<Tag> tags = tagsMap.get(metrics.getThreadPoolId());
+        Metrics.globalRegistry.gauge("threadpool.core.poolsize", tags, metrics, ThreadPoolExecutorMetrics::getCorePoolSize);
+        Metrics.globalRegistry.gauge("threadpool.maximum.poolsize", tags, metrics, ThreadPoolExecutorMetrics::getPoolSize);
+        Metrics.globalRegistry.gauge("threadpool.active.count", tags, metrics, value -> value.getActiveCount().longValue());
+        Metrics.globalRegistry.gauge("threadpool.poolsize", tags, metrics, value -> value.getPoolSize().longValue());
+        Metrics.globalRegistry.gauge("threadpool.largest.poolsize", tags, metrics, value -> value.getLargestPoolSize().longValue());
+        Metrics.globalRegistry.gauge("threadpool.completedtask.count", tags, metrics, ThreadPoolExecutorMetrics::getCompletedTaskCount);
+        Metrics.globalRegistry.gauge("threadpool.rejected.count", tags, metrics, value -> value.getRejectedCount().longValue());
+        Metrics.globalRegistry.gauge("threadpool.fail.count", tags, metrics, value -> value.getExecuteFailCount().longValue());
+        Metrics.globalRegistry.gauge("threadpool.timeout.count", tags, metrics, value -> value.getExecuteTimeoutCount().longValue());
+        Metrics.globalRegistry.gauge("threadpool.task.count", tags, metrics, ThreadPoolExecutorMetrics::getTaskCount);
+        Metrics.globalRegistry.gauge("threadpool.queue.size", tags, metrics, value -> value.getWorkQueueSize().longValue());
+        Metrics.globalRegistry.gauge("threadpool.wait.timeout.count", tags, metrics, value -> value.getWaitTimeoutCount().longValue());
     }
 
     public class MonitorTask implements Runnable {
@@ -90,8 +86,9 @@ public class SimpleThreadPoolExecutorMonitor implements ThreadPoolExecutorMonito
             threadPoolExecutorWrappers.stream().forEach(threadPoolExecutorWrapper -> {
                threadPoolExecutorWrapper.scrapeMetrics();
                SimpleThreadPoolExecutorMonitor.this.monitor(threadPoolExecutorWrapper.getMetrics());
+               threadPoolExecutorAlarmer.alarm(threadPoolExecutorWrapper.getMetrics(), threadPoolExecutorWrapper.getProperties());
             });
-            monitorExecutorService.schedule(this, 5, TimeUnit.SECONDS);
+            scheduledThreadPoolExecutor.schedule(this, 5, TimeUnit.SECONDS);
         }
     }
 }

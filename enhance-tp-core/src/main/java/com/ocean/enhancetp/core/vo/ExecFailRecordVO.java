@@ -13,7 +13,7 @@ import lombok.ToString;
 @Data
 @ToString
 @AllArgsConstructor
-public class ExecutionFailRecordVO {
+public class ExecFailRecordVO {
     /**
      * 线程池属性
      */

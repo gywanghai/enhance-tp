@@ -1,7 +1,5 @@
 package com.ocean.enhancetp.common.event;
 
-import com.google.common.eventbus.Subscribe;
-
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -11,7 +9,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @date: 2022/8/10
  * @Copyright： 公众号：海哥聊架构 | 博客：https://gywanghai.github.io/technote/ - 沉淀、分享、成长，让自己和他人都能有所收获！
  */
-public class EventDispatcher implements EventListener {
+public class EventDispatcher implements EventListener<Event<?>> {
 
     private Map<String, EventListener> eventListenerMap = new ConcurrentHashMap<>();
 
@@ -19,7 +17,6 @@ public class EventDispatcher implements EventListener {
         eventListenerMap.put(source, eventListener);
     }
 
-    @Subscribe
     @Override
     public void onMessage(Event event) {
         dispatch(event);

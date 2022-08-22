@@ -41,23 +41,6 @@ public interface ThreadPoolExecutorService {
     ThreadPoolExecutorWrapper getThreadPoolExecutorWrapper(ThreadPoolExecutor executor);
 
     /**
-     * 任务被拒绝次数递增1
-     * @param threadPoolId 线程池ID
-     */
-    void increaseRejectedCount(String threadPoolId);
-
-    /**
-     * 任务执行失败次数递增1
-     */
-    void increaseFailCount(String threadPoolId);
-
-    /**
-     * 任务执行超时次数递增1
-     * @param threadPoolId
-     */
-    void increaseExecTimeoutCount(String threadPoolId);
-
-    /**
      * 获取所有线程池包装器
      * @return
      */

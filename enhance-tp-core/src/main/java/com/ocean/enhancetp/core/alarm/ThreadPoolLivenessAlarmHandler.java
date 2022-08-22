@@ -1,6 +1,6 @@
 package com.ocean.enhancetp.core.alarm;
 
-import com.ocean.enhancetp.core.service.ThreadPoolExecutorService;
+import com.ocean.enhancetp.core.wrapper.ThreadPoolExecutorWrapper;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -13,7 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 public class ThreadPoolLivenessAlarmHandler implements AlarmEventHandler {
 
     @Override
-    public void handler(AlarmInfo alarmInfo, ThreadPoolExecutorService threadPoolExecutorService) {
+    public void handler(AlarmInfo alarmInfo, ThreadPoolExecutorWrapper threadPoolExecutorWrapper) {
         log.info("线程池活跃度告警: {}", alarmInfo);
     }
 }

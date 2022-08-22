@@ -6,13 +6,11 @@ import cn.hutool.core.util.ReflectUtil;
 import com.ocean.enhancetp.core.blockingqueue.ResizableLinkedBlockingQueue;
 import com.ocean.enhancetp.core.monitor.ThreadPoolExecutorMetrics;
 import com.ocean.enhancetp.core.properties.ThreadPoolExecutorProperties;
-import com.ocean.enhancetp.core.vo.ExecutionTimeVO;
 import lombok.Data;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
@@ -48,15 +46,12 @@ public class ThreadPoolExecutorWrapper {
         this.properties = properties;
         buildThreadExecutor(properties);
 
-        metrics = new ThreadPoolExecutorMetrics();
         initMetrics(properties.getThreadPoolId());
     }
 
     /**
      * 根据线程池创建线程池包装器
      * @param threadPoolExecutor
-     * @param namespace
-     * @param application
      * @param threadPoolId
      */
     public ThreadPoolExecutorWrapper(ThreadPoolExecutor threadPoolExecutor, String threadPoolId){
@@ -67,17 +62,18 @@ public class ThreadPoolExecutorWrapper {
 
         initProperties(threadPoolExecutor);
 
-        metrics = new ThreadPoolExecutorMetrics();
         initMetrics(threadPoolId);
 
         executor.setRejectedExecutionHandler(new RejectedExecutionHandlerWrapper(executor.getRejectedExecutionHandler(), properties));
     }
 
     private void initMetrics(String threadPoolId) {
+        metrics = new ThreadPoolExecutorMetrics();
         metrics.setThreadPoolId(threadPoolId);
         metrics.setRejectedCount(new AtomicLong(0));
         metrics.setExecuteFailCount(new AtomicLong(0));
         metrics.setExecuteTimeoutCount(new AtomicLong(0));
+        metrics.setWaitTimeoutCount(new AtomicLong());
         scrapeMetrics();
     }
 
@@ -89,7 +85,7 @@ public class ThreadPoolExecutorWrapper {
         metrics.setMaximumPoolSize(executor.getMaximumPoolSize());
         metrics.setCorePoolSize(executor.getCorePoolSize());
 
-        BlockingQueue blockingQueue = executor.getQueue();
+        BlockingQueue<?> blockingQueue = executor.getQueue();
         metrics.setWorkQueueSize(blockingQueue.size());
 
         metrics.setWorkQueueCapacity(blockingQueue.remainingCapacity() + blockingQueue.size());
@@ -119,7 +115,7 @@ public class ThreadPoolExecutorWrapper {
      */
     public void buildThreadExecutor(ThreadPoolExecutorProperties properties) {
         String className = properties.getClassName();
-        Class clazz = ClassUtil.loadClass(className);
+        Class<?> clazz = ClassUtil.loadClass(className);
         if(clazz == ThreadPoolExecutor.class){
             buildGeneralThreadPool(properties);
         }
@@ -148,7 +144,7 @@ public class ThreadPoolExecutorWrapper {
         long keepAliveTime = properties.getKeepAliveTime();
 
         TimeUnit timeUnit = TimeUnit.SECONDS;
-        BlockingQueue workQueue = buildBlockingQueue(properties);
+        BlockingQueue<Runnable> workQueue = buildBlockingQueue(properties);
 
 
         String prefix = properties.getThreadPoolId() + "-";
@@ -166,10 +162,8 @@ public class ThreadPoolExecutorWrapper {
         RejectedExecutionHandler targetHandler = null;
         try {
             targetHandler = (RejectedExecutionHandler) objectClass.newInstance();
-        } catch (InstantiationException e) {
-            throw new RuntimeException(e);
-        } catch (IllegalAccessException e) {
-            throw new RuntimeException(e);
+        } catch (Exception e) {
+            log.error("创建 RejectedExecutionHandler 失败", e);
         }
         return new RejectedExecutionHandlerWrapper(targetHandler, properties);
     }
@@ -181,23 +175,15 @@ public class ThreadPoolExecutorWrapper {
         if(SynchronousQueue.class.isAssignableFrom(workQueueClass) || PriorityBlockingQueue.class.isAssignableFrom(workQueueClass) || LinkedTransferQueue.class.isAssignableFrom(workQueueClass)){
             try {
                 workQueue = (BlockingQueue) workQueueClass.newInstance();
-            } catch (InstantiationException e) {
-                throw new RuntimeException(e);
-            } catch (IllegalAccessException e) {
-                throw new RuntimeException(e);
+            } catch (Exception e) {
+                log.error("创建阻塞队列失败", e);
             }
         }
         if(LinkedBlockingQueue.class.isAssignableFrom(workQueueClass)){
             try {
                 workQueue = (BlockingQueue) workQueueClass.getConstructor(int.class).newInstance(properties.getWorkQueueCapacity());
-            } catch (InvocationTargetException e) {
-                throw new RuntimeException(e);
-            } catch (NoSuchMethodException e) {
-                throw new RuntimeException(e);
-            } catch (InstantiationException e) {
-                throw new RuntimeException(e);
-            } catch (IllegalAccessException e) {
-                throw new RuntimeException(e);
+            } catch (Exception e) {
+                log.error("创建阻塞队列失败", e);
             }
         }
         return workQueue;
@@ -303,11 +289,19 @@ public class ThreadPoolExecutorWrapper {
         }
     }
 
-    /**
-     * 统计任务执行时间
-     * @param executionTimeVO
-     */
-    public void time(ExecutionTimeVO executionTimeVO) {
+    public void increaseWaitTimeoutCount() {
+        this.metrics.getWaitTimeoutCount().incrementAndGet();
+    }
 
+    public void increaseFailCount() {
+        this.metrics.getExecuteFailCount().incrementAndGet();
+    }
+
+    public void increaseExecTimeoutCount() {
+        this.metrics.getExecuteTimeoutCount().incrementAndGet();
+    }
+
+    public void increaseRejectedCount() {
+        this.metrics.getRejectedCount().incrementAndGet();
     }
 }

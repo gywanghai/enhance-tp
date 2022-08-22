@@ -13,9 +13,9 @@ import lombok.ToString;
 @Data
 @ToString
 @AllArgsConstructor
-public class ExecutionTimeVO {
+public class ExecTimeRecordVO {
 
     private String runnableClassName;
 
-    private Long costTime;
+    private Long time;
 }

@@ -1,14 +1,11 @@
 package com.ocean.enhancetp.core.service.impl;
 
 import cn.hutool.core.util.IdUtil;
-import cn.hutool.core.util.ServiceLoaderUtil;
-import com.ocean.enhancetp.common.event.DefaultEventPublisher;
 import com.ocean.enhancetp.common.event.Event;
 import com.ocean.enhancetp.common.event.EventContext;
-import com.ocean.enhancetp.common.event.EventPublisher;
-import com.ocean.enhancetp.core.alarm.*;
+import com.ocean.enhancetp.core.alarm.AlarmInfo;
+import com.ocean.enhancetp.core.alarm.AlarmType;
 import com.ocean.enhancetp.core.event.EventSource;
-import com.ocean.enhancetp.core.monitor.ThreadPoolExecutorMetrics;
 import com.ocean.enhancetp.core.properties.ThreadPoolExecutorProperties;
 import com.ocean.enhancetp.core.service.ThreadPoolExecutorService;
 import com.ocean.enhancetp.core.vo.UpdateRecordVO;
@@ -16,7 +13,10 @@ import com.ocean.enhancetp.core.wrapper.ThreadPoolExecutorWrapper;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Date;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -31,39 +31,6 @@ import java.util.concurrent.ThreadPoolExecutor;
 public class ThreadPoolExecutorServiceImpl implements ThreadPoolExecutorService {
 
     private Map<String, ThreadPoolExecutorWrapper> threadPoolExecutorWrapperMap = new ConcurrentHashMap<>();
-
-    private EventPublisher eventPublisher;
-
-    private ThreadPoolExecutorAlarmer threadPoolExecutorAlarmer;
-
-    public ThreadPoolExecutorServiceImpl(){
-        // 初始化事件监听器
-        initEventPublisher();
-        // 初始化线程池报警器
-        initAlarmer();
-    }
-
-    private void initAlarmer() {
-        ThreadPoolExecutorAlarmer alarmer = ServiceLoaderUtil.loadFirst(ThreadPoolExecutorAlarmer.class);
-        if(threadPoolExecutorAlarmer == null){
-            this.threadPoolExecutorAlarmer = new DefaultThreadPoolExecutorAlarmer();
-        }
-        else {
-            this.threadPoolExecutorAlarmer = alarmer;
-        }
-    }
-
-    private void initEventPublisher() {
-        ServiceLoader<EventPublisher> serviceLoader = ServiceLoader.load(EventPublisher.class);
-        if(serviceLoader.iterator().hasNext()){
-            this.eventPublisher =  serviceLoader.iterator().next();
-        }
-        else {
-            this.eventPublisher = new DefaultEventPublisher();
-        }
-        this.eventPublisher.registerEventListener(EventSource.ALARM.name(), new AlarmEventListener(this));
-        EventContext.init(this.eventPublisher);
-    }
 
     @Override
     public ThreadPoolExecutorWrapper getThreadPoolExecutorWrapper(String threadPoolId) {
@@ -89,7 +56,7 @@ public class ThreadPoolExecutorServiceImpl implements ThreadPoolExecutorService 
         alarmInfo.setData(new UpdateRecordVO(executorWrapper.getProperties(), threadPoolExecutorProperties));
         alarmInfo.setAlarmType(AlarmType.CONFIG_UPDATE);
 
-        eventPublisher.publishEvent(new Event<AlarmInfo>(IdUtil.nanoId(), EventSource.ALARM.name(), alarmInfo ,new Date()));
+        EventContext.publishEvent(new Event<>(IdUtil.nanoId(), EventSource.ALARM.name(), alarmInfo ,new Date()));
     }
 
     @Override
@@ -100,36 +67,6 @@ public class ThreadPoolExecutorServiceImpl implements ThreadPoolExecutorService 
             return optional.get().getValue();
         }
         return null;
-    }
-
-    @Override
-    public void increaseRejectedCount(String threadPoolId) {
-        ThreadPoolExecutorWrapper threadPoolExecutorWrapper = threadPoolExecutorWrapperMap.get(threadPoolId);
-        if(threadPoolExecutorWrapper != null){
-            ThreadPoolExecutorMetrics metrics = threadPoolExecutorWrapper.getMetrics();
-            metrics.getRejectedCount().incrementAndGet();
-            threadPoolExecutorWrapper.scrapeMetrics();
-        }
-    }
-
-    @Override
-    public void increaseFailCount(String threadPoolId) {
-        ThreadPoolExecutorWrapper threadPoolExecutorWrapper = threadPoolExecutorWrapperMap.get(threadPoolId);
-        if(threadPoolExecutorWrapper != null){
-            ThreadPoolExecutorMetrics metrics = threadPoolExecutorWrapper.getMetrics();
-            metrics.getExecuteFailCount().incrementAndGet();
-            threadPoolExecutorWrapper.scrapeMetrics();
-        }
-    }
-
-    @Override
-    public void increaseExecTimeoutCount(String threadPoolId) {
-        ThreadPoolExecutorWrapper threadPoolExecutorWrapper = threadPoolExecutorWrapperMap.get(threadPoolId);
-        if(threadPoolExecutorWrapper != null){
-            ThreadPoolExecutorMetrics metrics = threadPoolExecutorWrapper.getMetrics();
-            metrics.getExecuteTimeoutCount().incrementAndGet();
-            threadPoolExecutorWrapper.scrapeMetrics();
-        }
     }
 
     @Override

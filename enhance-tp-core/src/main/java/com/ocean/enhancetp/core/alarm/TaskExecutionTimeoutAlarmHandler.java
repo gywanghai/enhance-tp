@@ -1,8 +1,6 @@
 package com.ocean.enhancetp.core.alarm;
 
-import com.ocean.enhancetp.core.properties.ThreadPoolExecutorProperties;
-import com.ocean.enhancetp.core.service.ThreadPoolExecutorService;
-import com.ocean.enhancetp.core.vo.ExecutionTimeVO;
+import com.ocean.enhancetp.core.vo.ExecTimeRecordVO;
 import com.ocean.enhancetp.core.wrapper.ThreadPoolExecutorWrapper;
 import lombok.extern.slf4j.Slf4j;
 
@@ -16,17 +14,12 @@ import lombok.extern.slf4j.Slf4j;
 public class TaskExecutionTimeoutAlarmHandler implements AlarmEventHandler{
 
     @Override
-    public void handler(AlarmInfo alarmInfo, ThreadPoolExecutorService threadPoolExecutorService) {
-        ThreadPoolExecutorWrapper wrapper = threadPoolExecutorService.getThreadPoolExecutorWrapper(alarmInfo.getThreadPoolId());
-        ThreadPoolExecutorProperties threadPoolExecutorProperties = wrapper.getProperties();
-        if(!threadPoolExecutorProperties.getAlarmThreshold().containsKey(AlarmType.TASK_EXECUTION_TIMEOUT.name())){
-            return;
-        }
-        Integer alarmThreshold = (Integer) threadPoolExecutorProperties.getAlarmThreshold().get(AlarmType.TASK_EXECUTION_TIMEOUT.name());
-        ExecutionTimeVO executionTimeVO = (ExecutionTimeVO) alarmInfo.getData();
-        if(alarmThreshold < executionTimeVO.getCostTime()){
+    public void handler(AlarmInfo alarmInfo, ThreadPoolExecutorWrapper threadPoolExecutorWrapper) {
+        Integer alarmThreshold = (Integer) threadPoolExecutorWrapper.getProperties().getAlarmThreshold().get(AlarmType.TASK_EXECUTION_TIMEOUT.name());
+        ExecTimeRecordVO execTimeRecordVO = (ExecTimeRecordVO) alarmInfo.getData();
+        if(alarmThreshold < execTimeRecordVO.getTime()){
             log.info("任务执行超时告警: {}", alarmInfo);
-            threadPoolExecutorService.increaseExecTimeoutCount(alarmInfo.getThreadPoolId());
+            threadPoolExecutorWrapper.increaseExecTimeoutCount();
         }
     }
 }

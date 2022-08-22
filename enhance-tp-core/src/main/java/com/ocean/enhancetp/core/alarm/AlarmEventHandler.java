@@ -1,6 +1,6 @@
 package com.ocean.enhancetp.core.alarm;
 
-import com.ocean.enhancetp.core.service.ThreadPoolExecutorService;
+import com.ocean.enhancetp.core.wrapper.ThreadPoolExecutorWrapper;
 
 /**
  * @description:
@@ -10,6 +10,6 @@ import com.ocean.enhancetp.core.service.ThreadPoolExecutorService;
  */
 public interface AlarmEventHandler {
 
-    public void handler(AlarmInfo alarmInfo, ThreadPoolExecutorService threadPoolExecutorService);
+    public void handler(AlarmInfo alarmInfo, ThreadPoolExecutorWrapper threadPoolExecutorWrapper);
 
 }

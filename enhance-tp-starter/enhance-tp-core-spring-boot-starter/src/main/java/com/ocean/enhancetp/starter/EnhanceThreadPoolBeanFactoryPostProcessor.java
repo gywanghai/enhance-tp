@@ -3,8 +3,6 @@ package com.ocean.enhancetp.starter;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 /**
  * @description:
@@ -16,8 +14,7 @@ public class EnhanceThreadPoolBeanFactoryPostProcessor implements BeanFactoryPos
 
     @Override
     public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
-        ApplicationContext applicationContext = new AnnotationConfigApplicationContext();
-        beanFactory.getBeanNamesForAnnotation(EnhanceTp.class);
+        // TODO 注册ThreadPoolExecutorWrapper
     }
 
 }

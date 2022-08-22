@@ -30,7 +30,11 @@ public enum AlarmType {
     /**
      * 任务执行失败
      */
-    TASK_FAIL(70, "任务执行失败");
+    TASK_FAIL(60, "任务执行失败"),
+    /**
+     * 任务等待超时
+     */
+    WAIT_TIMEOUT(70, "任务等待超时");
 
     private int code;
 
