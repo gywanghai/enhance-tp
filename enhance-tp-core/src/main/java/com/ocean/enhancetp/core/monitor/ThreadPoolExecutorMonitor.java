@@ -13,6 +13,10 @@ public interface ThreadPoolExecutorMonitor {
      */
     public void startMonitor();
 
+    /**
+     * 监控性能指标
+     * @param metrics
+     */
     public void monitor(ThreadPoolExecutorMetrics metrics);
 
 }

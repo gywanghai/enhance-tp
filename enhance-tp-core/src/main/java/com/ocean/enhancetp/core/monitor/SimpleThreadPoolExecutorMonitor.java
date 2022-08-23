@@ -4,7 +4,6 @@ import cn.hutool.core.thread.NamedThreadFactory;
 import com.ocean.enhancetp.core.alarm.ThreadPoolExecutorAlarmer;
 import com.ocean.enhancetp.core.service.ThreadPoolExecutorService;
 import com.ocean.enhancetp.core.wrapper.ThreadPoolExecutorWrapper;
-import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.Tag;
 import lombok.extern.slf4j.Slf4j;
@@ -17,7 +16,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Function;
 
 /**
  * @description: 默认线程池监控器

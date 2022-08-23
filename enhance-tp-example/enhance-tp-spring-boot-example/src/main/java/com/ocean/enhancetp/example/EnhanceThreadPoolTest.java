@@ -18,7 +18,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
-import org.springframework.stereotype.Component;
 
 import java.security.SecureRandom;
 import java.util.Map;
@@ -34,7 +33,7 @@ import java.util.concurrent.ThreadPoolExecutor;
  * @Copyright： 公众号：海哥聊架构 | 博客：https://gywanghai.github.io/technote/ - 沉淀、分享、成长，让自己和他人都能有所收获！
  */
 @Slf4j
-@Component
+//@Component
 public class EnhanceThreadPoolTest implements ApplicationRunner {
 
     @Autowired
