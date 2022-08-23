@@ -18,7 +18,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @Slf4j
 public class DefaultEventPublisher implements EventPublisher {
 
-    private LinkedBlockingQueue<Event> eventLinkedBlockingQueue = new LinkedBlockingQueue<>(65535);
+    private LinkedBlockingQueue<Event> eventLinkedBlockingQueue = new LinkedBlockingQueue<>();
 
     private Map<String, EventListener<Event>> eventListenerMap = new ConcurrentHashMap<>();
 
@@ -64,6 +64,6 @@ public class DefaultEventPublisher implements EventPublisher {
 
     @Override
     public void stop() {
-        running.set(true);
+        running.set(false);
     }
 }

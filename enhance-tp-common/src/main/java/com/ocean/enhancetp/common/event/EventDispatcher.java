@@ -24,7 +24,7 @@ public class EventDispatcher implements EventListener<Event<?>> {
 
     public void dispatch(Event<Object> event){
         String source = event.getSource();
-        // 根据不同的时间源，调用不同的监听器
+        // 根据不同的事件源，调用不同的监听器
         EventListener eventListener = eventListenerMap.get(source);
         if(null != eventListener){
             eventListener.onMessage(event);

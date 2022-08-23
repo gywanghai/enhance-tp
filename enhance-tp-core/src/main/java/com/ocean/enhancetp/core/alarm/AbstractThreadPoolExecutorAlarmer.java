@@ -20,6 +20,10 @@ public abstract class AbstractThreadPoolExecutorAlarmer implements ThreadPoolExe
 
     private EventPublisher eventPublisher;
 
+    protected AbstractThreadPoolExecutorAlarmer(EventPublisher eventPublisher){
+        this.eventPublisher = eventPublisher;
+    }
+
     @Override
     public void alarm(ThreadPoolExecutorMetrics threadPoolExecutorMetrics, ThreadPoolExecutorProperties properties) {
         List<AlarmInfo> alarmInfoList = checkMetrics(threadPoolExecutorMetrics, properties);

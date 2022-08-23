@@ -1,4 +1,4 @@
-package com.ocean.enhancetp.starter;
+package com.ocean.enhancetp.core.registrar;
 
 import com.ocean.enhancetp.core.monitor.ThreadPoolExecutorMonitor;
 import com.ocean.enhancetp.core.service.ThreadPoolExecutorService;
@@ -39,9 +39,7 @@ public class ThreadPoolExecutorWrapperRegistar implements SmartInitializingSingl
         if(beanNames.length == 0){
             return;
         }
-        Arrays.stream(beanNames).forEach(beanName -> {
-            threadPoolExecutorService.registerThreadPoolExecutorWrapper((ThreadPoolExecutorWrapper) applicationContext.getBean(beanName));
-        });
+        Arrays.stream(beanNames).forEach(beanName -> threadPoolExecutorService.registerThreadPoolExecutorWrapper((ThreadPoolExecutorWrapper) applicationContext.getBean(beanName)));
         threadPoolExecutorMonitor.startMonitor();
     }
 }

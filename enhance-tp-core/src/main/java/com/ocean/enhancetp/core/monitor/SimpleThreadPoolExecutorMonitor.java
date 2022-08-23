@@ -44,7 +44,7 @@ public class SimpleThreadPoolExecutorMonitor implements ThreadPoolExecutorMonito
     public SimpleThreadPoolExecutorMonitor(ThreadPoolExecutorService threadPoolExecutorService, ThreadPoolExecutorAlarmer threadPoolExecutorAlarmer){
         this.threadPoolExecutorService = threadPoolExecutorService;
         this.threadPoolExecutorAlarmer = threadPoolExecutorAlarmer;
-        this.scheduledThreadPoolExecutor = new ScheduledThreadPoolExecutor(1, new NamedThreadFactory("enhance-tp-monitor",false));
+        this.scheduledThreadPoolExecutor = new ScheduledThreadPoolExecutor(Runtime.getRuntime().availableProcessors(), new NamedThreadFactory("enhance-tp-monitor",false));
     }
 
     @Override

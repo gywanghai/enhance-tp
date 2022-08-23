@@ -1,4 +1,4 @@
-package com.ocean.enhancetp.starter;
+package com.ocean.enhancetp.core.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

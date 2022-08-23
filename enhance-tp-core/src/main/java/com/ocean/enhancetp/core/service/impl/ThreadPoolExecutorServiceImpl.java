@@ -1,20 +1,12 @@
 package com.ocean.enhancetp.core.service.impl;
 
-import cn.hutool.core.util.IdUtil;
-import com.ocean.enhancetp.common.event.Event;
-import com.ocean.enhancetp.common.event.EventContext;
-import com.ocean.enhancetp.core.alarm.AlarmInfo;
-import com.ocean.enhancetp.core.alarm.AlarmType;
-import com.ocean.enhancetp.core.event.EventSource;
 import com.ocean.enhancetp.core.properties.ThreadPoolExecutorProperties;
 import com.ocean.enhancetp.core.service.ThreadPoolExecutorService;
-import com.ocean.enhancetp.core.vo.UpdateRecordVO;
 import com.ocean.enhancetp.core.wrapper.ThreadPoolExecutorWrapper;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collection;
-import java.util.Date;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -49,14 +41,6 @@ public class ThreadPoolExecutorServiceImpl implements ThreadPoolExecutorService 
         ThreadPoolExecutorWrapper executorWrapper = this.getThreadPoolExecutorWrapper(threadPoolId);
         executorWrapper.update(threadPoolExecutorProperties);
         executorWrapper.scrapeMetrics();
-
-        AlarmInfo alarmInfo = new AlarmInfo();
-        alarmInfo.setThreadPoolId(threadPoolExecutorProperties.getThreadPoolId());
-        alarmInfo.setDate(new Date());
-        alarmInfo.setData(new UpdateRecordVO(executorWrapper.getProperties(), threadPoolExecutorProperties));
-        alarmInfo.setAlarmType(AlarmType.CONFIG_UPDATE);
-
-        EventContext.publishEvent(new Event<>(IdUtil.nanoId(), EventSource.ALARM.name(), alarmInfo ,new Date()));
     }
 
     @Override

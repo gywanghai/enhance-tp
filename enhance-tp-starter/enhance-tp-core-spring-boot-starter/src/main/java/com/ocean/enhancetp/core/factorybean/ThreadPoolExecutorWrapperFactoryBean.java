@@ -1,4 +1,4 @@
-package com.ocean.enhancetp.starter;
+package com.ocean.enhancetp.core.factorybean;
 
 import com.ocean.enhancetp.core.wrapper.ThreadPoolExecutorWrapper;
 import org.springframework.beans.BeansException;

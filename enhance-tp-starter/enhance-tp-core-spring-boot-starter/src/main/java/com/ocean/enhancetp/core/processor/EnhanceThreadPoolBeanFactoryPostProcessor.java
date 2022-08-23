@@ -1,11 +1,16 @@
-package com.ocean.enhancetp.starter;
+package com.ocean.enhancetp.core.processor;
 
+import com.ocean.enhancetp.core.annotation.EnhanceThreadPool;
+import com.ocean.enhancetp.core.factorybean.ThreadPoolExecutorWrapperFactoryBean;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowire;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
-import org.springframework.beans.factory.support.*;
+import org.springframework.beans.factory.support.BeanDefinitionBuilder;
+import org.springframework.beans.factory.support.BeanDefinitionRegistry;
+import org.springframework.beans.factory.support.BeanDefinitionRegistryPostProcessor;
+import org.springframework.beans.factory.support.GenericBeanDefinition;
 
 import java.util.Arrays;
 
@@ -18,8 +23,6 @@ import java.util.Arrays;
 @Slf4j
 public class EnhanceThreadPoolBeanFactoryPostProcessor implements BeanDefinitionRegistryPostProcessor {
 
-    private ConfigurableListableBeanFactory beanFactory;
-
     private BeanDefinitionRegistry beanDefinitionRegistry;
 
     /**
@@ -30,25 +33,22 @@ public class EnhanceThreadPoolBeanFactoryPostProcessor implements BeanDefinition
     @Override
     public void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry registry) throws BeansException {
         this.beanDefinitionRegistry = registry;
-        log.info("postProcessBeanDefinitionRegistry");
     }
 
     /**
      * ConfigurableListableBeanFactory 只能把已创建好的对象注册到 Spring IoC 容器中
-     * @param beanFactory the bean factory used by the application context
+     * @param configurableListableBeanFactory the bean factory used by the application context
      * @throws BeansException
      */
     @Override
-    public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
-        this.beanFactory = beanFactory;
-        String[] beanNames = this.beanFactory.getBeanNamesForAnnotation(EnhanceThreadPool.class);
+    public void postProcessBeanFactory(ConfigurableListableBeanFactory configurableListableBeanFactory) throws BeansException {
+        String[] beanNames = configurableListableBeanFactory.getBeanNamesForAnnotation(EnhanceThreadPool.class);
         if(beanNames.length == 0){
             return;
         }
         Arrays.stream(beanNames).forEach(beanName -> {
             String wrapperBeanDefinitionName = StringUtils.joinWith("", beanName, "Wrapper");
-            RootBeanDefinition threadPoolExecutorBeanDefinition = (RootBeanDefinition) beanFactory.getBeanDefinition(beanName);
-            EnhanceThreadPool enhanceThreadPool = beanFactory.findAnnotationOnBean(beanName, EnhanceThreadPool.class);
+            EnhanceThreadPool enhanceThreadPool = configurableListableBeanFactory.findAnnotationOnBean(beanName, EnhanceThreadPool.class);
             if(enhanceThreadPool == null){
                 return;
             }

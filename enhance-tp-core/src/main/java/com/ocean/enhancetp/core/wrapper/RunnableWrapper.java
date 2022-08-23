@@ -3,7 +3,7 @@ package com.ocean.enhancetp.core.wrapper;
 import cn.hutool.core.exceptions.ExceptionUtil;
 import cn.hutool.core.util.IdUtil;
 import com.ocean.enhancetp.common.event.Event;
-import com.ocean.enhancetp.common.event.EventContext;
+import com.ocean.enhancetp.common.event.EventPublisher;
 import com.ocean.enhancetp.core.alarm.AlarmInfo;
 import com.ocean.enhancetp.core.alarm.AlarmType;
 import com.ocean.enhancetp.core.event.EventSource;
@@ -35,11 +35,14 @@ public class RunnableWrapper implements Runnable {
 
     private ThreadPoolExecutorWrapper threadPoolExecutorWrapper;
 
+    private EventPublisher eventPublisher;
+
     private Date submitDate;
 
-    public RunnableWrapper(ThreadPoolExecutorWrapper threadPoolExecutorWrapper, Runnable target){
+    public RunnableWrapper(ThreadPoolExecutorWrapper threadPoolExecutorWrapper, Runnable target, EventPublisher eventPublisher){
         this.target = target;
         this.threadPoolExecutorWrapper = threadPoolExecutorWrapper;
+        this.eventPublisher = eventPublisher;
         this.submitDate = new Date();
     }
 
@@ -68,14 +71,14 @@ public class RunnableWrapper implements Runnable {
                             log.error(e.getMessage(), e);
                             // 发布任务执行失败事件
                             AlarmInfo alarmInfo = buildExecFailAlarm(threadPoolExecutorWrapper.getProperties(), e);
-                            EventContext.publishEvent(new Event<>(IdUtil.nanoId(), EventSource.ALARM.name(), alarmInfo, new Date()));
+                            eventPublisher.publishEvent(new Event<>(IdUtil.nanoId(), EventSource.ALARM.name(), alarmInfo, new Date()));
                         }finally {
                             stopwatch.stop();
                             long mills = stopwatch.getTime(TimeUnit.MILLISECONDS);
                             ExecTimeRecordVO executionTimeVO = new ExecTimeRecordVO(target.getClass().getName(), mills);
                             // 发布执行时间统计事件
                             AlarmInfo alarmInfo = buildAlarmInfo(threadPoolExecutorWrapper.getProperties(), executionTimeVO);
-                            EventContext.publishEvent(new Event<>(IdUtil.nanoId(), EventSource.ALARM.name(), alarmInfo, new Date()));
+                            eventPublisher.publishEvent(new Event<>(IdUtil.nanoId(), EventSource.ALARM.name(), alarmInfo, new Date()));
                         }
                     });
         }
@@ -100,7 +103,7 @@ public class RunnableWrapper implements Runnable {
                     .register(Metrics.globalRegistry).record(waitTimeRecordVO.getTime(), TimeUnit.MILLISECONDS);
             // 发布任务等待时间时间
             AlarmInfo alarmInfo = buildWaitTimeAlarmInfo(threadPoolExecutorWrapper.getProperties(), waitTimeRecordVO);
-            EventContext.publishEvent(new Event<>(IdUtil.nanoId(), EventSource.ALARM.name(), alarmInfo, new Date()));
+            eventPublisher.publishEvent(new Event<>(IdUtil.nanoId(), EventSource.ALARM.name(), alarmInfo, new Date()));
         }
     }
 

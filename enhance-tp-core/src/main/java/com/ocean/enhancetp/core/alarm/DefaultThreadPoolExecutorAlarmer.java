@@ -1,5 +1,6 @@
 package com.ocean.enhancetp.core.alarm;
 
+import com.ocean.enhancetp.common.event.EventPublisher;
 import com.ocean.enhancetp.core.monitor.ThreadPoolExecutorMetrics;
 import com.ocean.enhancetp.core.properties.ThreadPoolExecutorProperties;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +18,11 @@ import java.util.Map;
  */
 @Slf4j
 public class DefaultThreadPoolExecutorAlarmer extends AbstractThreadPoolExecutorAlarmer {
+
+    public DefaultThreadPoolExecutorAlarmer(EventPublisher eventPublisher) {
+        super(eventPublisher);
+    }
+
     @Override
     public List<AlarmInfo> checkMetrics(ThreadPoolExecutorMetrics threadPoolExecutorMetrics, ThreadPoolExecutorProperties properties) {
         List<AlarmInfo> list = new ArrayList<>();
