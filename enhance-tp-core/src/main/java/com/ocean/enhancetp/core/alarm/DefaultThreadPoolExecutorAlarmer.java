@@ -2,7 +2,7 @@ package com.ocean.enhancetp.core.alarm;
 
 import com.ocean.enhancetp.common.event.EventPublisher;
 import com.ocean.enhancetp.core.monitor.ThreadPoolExecutorMetrics;
-import com.ocean.enhancetp.core.properties.ThreadPoolExecutorProperties;
+import com.ocean.enhancetp.core.properties.ThreadPoolExecutorProperty;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
@@ -24,36 +24,38 @@ public class DefaultThreadPoolExecutorAlarmer extends AbstractThreadPoolExecutor
     }
 
     @Override
-    public List<AlarmInfo> checkMetrics(ThreadPoolExecutorMetrics threadPoolExecutorMetrics, ThreadPoolExecutorProperties properties) {
+    public List<AlarmInfo> checkMetrics(ThreadPoolExecutorMetrics threadPoolExecutorMetrics, ThreadPoolExecutorProperty properties) {
         List<AlarmInfo> list = new ArrayList<>();
         int activeCount = threadPoolExecutorMetrics.getActiveCount();
         int queueSize = threadPoolExecutorMetrics.getWorkQueueSize();
 
         // 线程池活跃度
         Map<String, Number> alarmThreshold = properties.getAlarmThreshold();
-        Integer livenessThresold = (Integer) alarmThreshold.get(AlarmType.THREADPOOL_LIVENESS.name());
-        if(null != livenessThresold && activeCount >= livenessThresold){
-            AlarmInfo alarmInfo = new AlarmInfo();
-            alarmInfo.setAlarmType(AlarmType.THREADPOOL_LIVENESS);
-            alarmInfo.setDate(new Date());
-            alarmInfo.setThreadPoolId(properties.getThreadPoolId());
-            alarmInfo.setData(threadPoolExecutorMetrics);
-            list.add(alarmInfo);
+        if(alarmThreshold.containsKey(AlarmType.THREADPOOL_LIVENESS.name())){
+            int livenessThresold = alarmThreshold.get(AlarmType.THREADPOOL_LIVENESS.name()).intValue();
+            if(activeCount >= livenessThresold){
+                AlarmInfo alarmInfo = new AlarmInfo();
+                alarmInfo.setAlarmType(AlarmType.THREADPOOL_LIVENESS);
+                alarmInfo.setDate(new Date());
+                alarmInfo.setThreadPoolId(properties.getThreadPoolId());
+                alarmInfo.setData(threadPoolExecutorMetrics);
+                list.add(alarmInfo);
+            }
         }
-
         /**
          * 队列容量
          */
-        Integer queueSizeAlarmThreshold = (Integer) alarmThreshold.get(AlarmType.BLOCKING_QUEUE_SIZE.name());
-        if(null != queueSizeAlarmThreshold && queueSize >= queueSizeAlarmThreshold){
-            AlarmInfo alarmInfo = new AlarmInfo();
-            alarmInfo.setAlarmType(AlarmType.BLOCKING_QUEUE_SIZE);
-            alarmInfo.setDate(new Date());
-            alarmInfo.setThreadPoolId(properties.getThreadPoolId());
-            alarmInfo.setData(threadPoolExecutorMetrics);
-            list.add(alarmInfo);
+        if(alarmThreshold.containsKey(AlarmType.BLOCKING_QUEUE_SIZE.name())){
+            int queueSizeAlarmThreshold = alarmThreshold.get(AlarmType.BLOCKING_QUEUE_SIZE.name()).intValue();
+            if(queueSize >= queueSizeAlarmThreshold){
+                AlarmInfo alarmInfo = new AlarmInfo();
+                alarmInfo.setAlarmType(AlarmType.BLOCKING_QUEUE_SIZE);
+                alarmInfo.setDate(new Date());
+                alarmInfo.setThreadPoolId(properties.getThreadPoolId());
+                alarmInfo.setData(threadPoolExecutorMetrics);
+                list.add(alarmInfo);
+            }
         }
-
         return list;
     }
 }

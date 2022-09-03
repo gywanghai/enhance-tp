@@ -1,6 +1,6 @@
 package com.ocean.enhancetp.core.service;
 
-import com.ocean.enhancetp.core.properties.ThreadPoolExecutorProperties;
+import com.ocean.enhancetp.core.properties.ThreadPoolExecutorProperty;
 import com.ocean.enhancetp.core.wrapper.ThreadPoolExecutorWrapper;
 
 import java.util.Collection;
@@ -32,7 +32,7 @@ public interface ThreadPoolExecutorService {
      * @param threadPoolId 线程池ID
      * @param threadPoolExecutorProperties 线程池参数
      */
-    public void update(String threadPoolId, ThreadPoolExecutorProperties threadPoolExecutorProperties);
+    public void update(String threadPoolId, ThreadPoolExecutorProperty threadPoolExecutorProperties);
     /**
      * 获取线程池
      * @param executor 线程池

@@ -2,7 +2,7 @@ package com.ocean.enhancetp.example;
 
 import com.ocean.enhancetp.common.event.EventPublisher;
 import com.ocean.enhancetp.core.alarm.AlarmType;
-import com.ocean.enhancetp.core.properties.ThreadPoolExecutorProperties;
+import com.ocean.enhancetp.core.properties.ThreadPoolExecutorProperty;
 import com.ocean.enhancetp.core.wrapper.RunnableWrapper;
 import com.ocean.enhancetp.core.wrapper.ThreadPoolExecutorWrapper;
 import lombok.extern.slf4j.Slf4j;
@@ -47,7 +47,7 @@ public class EnhanceThreadPoolTest implements ApplicationContextAware,Applicatio
     public void afterSingletonsInstantiated() {
         ThreadPoolExecutor threadPoolExecutor = applicationContext.getBean("threadPoolExecutor", ThreadPoolExecutor.class);
         ThreadPoolExecutorWrapper threadPoolExecutorWrapper = applicationContext.getBean("threadPoolExecutorWrapper", ThreadPoolExecutorWrapper.class);
-        ThreadPoolExecutorProperties threadPoolExecutorProperties = threadPoolExecutorWrapper.getProperties();
+        ThreadPoolExecutorProperty threadPoolExecutorProperty = threadPoolExecutorWrapper.getProperty();
 
         Map<String, Number> alarmThreshold = new ConcurrentHashMap<>();
         alarmThreshold.put(AlarmType.BLOCKING_QUEUE_SIZE.name(), 1000);
@@ -55,20 +55,20 @@ public class EnhanceThreadPoolTest implements ApplicationContextAware,Applicatio
         alarmThreshold.put(AlarmType.TASK_EXECUTION_TIMEOUT.name(), 10);
         alarmThreshold.put(AlarmType.WAIT_TIMEOUT.name(), 10);
 
-        threadPoolExecutorProperties.setAlarmThreshold(alarmThreshold);
-        for (int i = 0; i < 1000; i++){
-            threadPoolExecutor.submit(new RunnableWrapper(threadPoolExecutorWrapper, () -> {
-                log.info(UUID.randomUUID().toString());
-                try {
-                    Thread.sleep(new SecureRandom().nextInt(100));
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    log.error("中断异常", e);
-                }
-                if(System.currentTimeMillis() % 2 == 0){
-                    log.info("result: {}",1/0);
-                }
-            }, eventPublisher));
-        }
+        threadPoolExecutorProperty.setAlarmThreshold(alarmThreshold);
+//        for (int i = 0; i < 1000; i++){
+//            threadPoolExecutor.submit(new RunnableWrapper(threadPoolExecutorWrapper, () -> {
+//                log.info(UUID.randomUUID().toString());
+//                try {
+//                    Thread.sleep(new SecureRandom().nextInt(100));
+//                } catch (InterruptedException e) {
+//                    Thread.currentThread().interrupt();
+//                    log.error("中断异常", e);
+//                }
+//                if(System.currentTimeMillis() % 2 == 0){
+//                    log.info("result: {}",1/0);
+//                }
+//            }, eventPublisher));
+//        }
     }
 }

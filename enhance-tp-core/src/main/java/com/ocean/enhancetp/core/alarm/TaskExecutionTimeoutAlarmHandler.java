@@ -15,7 +15,7 @@ public class TaskExecutionTimeoutAlarmHandler implements AlarmEventHandler{
 
     @Override
     public void handler(AlarmInfo alarmInfo, ThreadPoolExecutorWrapper threadPoolExecutorWrapper) {
-        Integer alarmThreshold = (Integer) threadPoolExecutorWrapper.getProperties().getAlarmThreshold().get(AlarmType.TASK_EXECUTION_TIMEOUT.name());
+        Integer alarmThreshold = (Integer) threadPoolExecutorWrapper.getProperty().getAlarmThreshold().get(AlarmType.TASK_EXECUTION_TIMEOUT.name());
         ExecTimeRecordVO execTimeRecordVO = (ExecTimeRecordVO) alarmInfo.getData();
         if(alarmThreshold < execTimeRecordVO.getTime()){
             log.info("任务执行超时告警: {}", alarmInfo);

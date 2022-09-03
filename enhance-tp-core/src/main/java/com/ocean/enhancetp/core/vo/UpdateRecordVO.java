@@ -1,6 +1,6 @@
 package com.ocean.enhancetp.core.vo;
 
-import com.ocean.enhancetp.core.properties.ThreadPoolExecutorProperties;
+import com.ocean.enhancetp.core.properties.ThreadPoolExecutorProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.ToString;
@@ -16,8 +16,8 @@ import lombok.ToString;
 @AllArgsConstructor
 public class UpdateRecordVO {
 
-    private ThreadPoolExecutorProperties oldProperties;
+    private ThreadPoolExecutorProperty oldProperties;
 
-    private ThreadPoolExecutorProperties newProperties;
+    private ThreadPoolExecutorProperty newProperties;
 
 }

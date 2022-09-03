@@ -1,6 +1,6 @@
 package com.ocean.enhancetp.core.alarm;
 
-import com.ocean.enhancetp.core.properties.ThreadPoolExecutorProperties;
+import com.ocean.enhancetp.core.properties.ThreadPoolExecutorProperty;
 import com.ocean.enhancetp.core.vo.WaitTimeRecordVO;
 import com.ocean.enhancetp.core.wrapper.ThreadPoolExecutorWrapper;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +18,7 @@ public class TaskWaitTimeoutAlarmHandler implements AlarmEventHandler{
 
     @Override
     public void handler(AlarmInfo alarmInfo, ThreadPoolExecutorWrapper threadPoolExecutorWrapper) {
-        ThreadPoolExecutorProperties properties = threadPoolExecutorWrapper.getProperties();
+        ThreadPoolExecutorProperty properties = threadPoolExecutorWrapper.getProperty();
         Map<String,Number> thresholdMap =  properties.getAlarmThreshold();
         if(!thresholdMap.containsKey(AlarmType.WAIT_TIMEOUT.name())){
             return;

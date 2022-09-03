@@ -6,7 +6,7 @@ import com.ocean.enhancetp.common.event.EventContext;
 import com.ocean.enhancetp.core.alarm.AlarmInfo;
 import com.ocean.enhancetp.core.alarm.AlarmType;
 import com.ocean.enhancetp.core.event.EventSource;
-import com.ocean.enhancetp.core.properties.ThreadPoolExecutorProperties;
+import com.ocean.enhancetp.core.properties.ThreadPoolExecutorProperty;
 import com.ocean.enhancetp.core.vo.RejectedExecutionRecordVO;
 
 import java.util.Date;
@@ -29,7 +29,7 @@ public class RejectedExecutionHandlerWrapper implements RejectedExecutionHandler
         return rejectedExecutionHandler;
     }
 
-    public RejectedExecutionHandlerWrapper(RejectedExecutionHandler rejectedExecutionHandler, ThreadPoolExecutorProperties threadPoolExecutorProperties ){
+    public RejectedExecutionHandlerWrapper(RejectedExecutionHandler rejectedExecutionHandler, ThreadPoolExecutorProperty threadPoolExecutorProperties ){
         this.rejectedExecutionHandler = rejectedExecutionHandler;
         this.threadPoolId = threadPoolExecutorProperties.getThreadPoolId();
     }

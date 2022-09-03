@@ -1,6 +1,6 @@
 package com.ocean.enhancetp.core.service.impl;
 
-import com.ocean.enhancetp.core.properties.ThreadPoolExecutorProperties;
+import com.ocean.enhancetp.core.properties.ThreadPoolExecutorProperty;
 import com.ocean.enhancetp.core.service.ThreadPoolExecutorService;
 import com.ocean.enhancetp.core.wrapper.ThreadPoolExecutorWrapper;
 import lombok.Data;
@@ -31,16 +31,19 @@ public class ThreadPoolExecutorServiceImpl implements ThreadPoolExecutorService 
 
     @Override
     public void registerThreadPoolExecutorWrapper(ThreadPoolExecutorWrapper threadPoolExecutorWrapper) {
-        ThreadPoolExecutorProperties properties = threadPoolExecutorWrapper.getProperties();
+        ThreadPoolExecutorProperty properties = threadPoolExecutorWrapper.getProperty();
         threadPoolExecutorWrapperMap.put(properties.getThreadPoolId(), threadPoolExecutorWrapper);
     }
 
     @Override
-    public void update(String threadPoolId, ThreadPoolExecutorProperties threadPoolExecutorProperties) {
+    public void update(String threadPoolId, ThreadPoolExecutorProperty threadPoolExecutorProperties) {
         // 根据线程池 ID 查询线程池
         ThreadPoolExecutorWrapper executorWrapper = this.getThreadPoolExecutorWrapper(threadPoolId);
-        executorWrapper.update(threadPoolExecutorProperties);
-        executorWrapper.scrapeMetrics();
+        if(executorWrapper != null){
+            executorWrapper.update(threadPoolExecutorProperties);
+            executorWrapper.scrapeMetrics();
+            registerThreadPoolExecutorWrapper(executorWrapper);
+        }
     }
 
     @Override

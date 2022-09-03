@@ -1,5 +1,6 @@
 package com.ocean.enhancetp.example;
 
+import cn.hutool.core.thread.NamedThreadFactory;
 import com.ocean.enhancetp.core.annotation.EnhanceThreadPool;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.SpringApplication;
@@ -25,7 +26,7 @@ public class ExampleApplication {
     @Bean
     public ThreadPoolExecutor threadPoolExecutor(){
         return new ThreadPoolExecutor(1, 1, 60,
-                TimeUnit.SECONDS, new LinkedBlockingDeque<>());
+                TimeUnit.SECONDS, new LinkedBlockingDeque<>(), new NamedThreadFactory("test", true));
     }
 
     public static void main(String[] args) {

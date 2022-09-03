@@ -1,9 +1,5 @@
-spring:
-  application:
-    name: example
-
 server:
-  port: 8888
+  port: 9999
 
 management:
   endpoints:
@@ -15,3 +11,11 @@ management:
   endpoint:
     health:
       show-details: always
+
+
+spring:
+  enhancetp:
+    datasource:
+      nacos:
+        server-addr: "${spring.cloud.nacos.config.server-addr}"
+        groupId: DEFAULT_GROUP

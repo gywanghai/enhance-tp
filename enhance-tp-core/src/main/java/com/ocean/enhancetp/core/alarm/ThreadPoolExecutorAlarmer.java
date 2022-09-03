@@ -1,7 +1,7 @@
 package com.ocean.enhancetp.core.alarm;
 
 import com.ocean.enhancetp.core.monitor.ThreadPoolExecutorMetrics;
-import com.ocean.enhancetp.core.properties.ThreadPoolExecutorProperties;
+import com.ocean.enhancetp.core.properties.ThreadPoolExecutorProperty;
 
 /**
  * @description: 线程池告警器
@@ -11,6 +11,6 @@ import com.ocean.enhancetp.core.properties.ThreadPoolExecutorProperties;
  */
 public interface ThreadPoolExecutorAlarmer {
 
-    public void alarm(ThreadPoolExecutorMetrics threadPoolExecutorMetrics, ThreadPoolExecutorProperties properties);
+    public void alarm(ThreadPoolExecutorMetrics threadPoolExecutorMetrics, ThreadPoolExecutorProperty properties);
 
 }

@@ -15,6 +15,66 @@
 
     <modules>
         <module>enhance-tp-core-spring-boot-starter</module>
+        <module>enhance-tp-spring-boot-starter</module>
+        <module>enhance-tp-nacos-datasource-spring-boot-starter</module>
     </modules>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.ocean</groupId>
+                <artifactId>enhance-tp-datasource-extension</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.ocean</groupId>
+                <artifactId>enhance-tp-datasource-apollo</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.ocean</groupId>
+                <artifactId>enhance-tp-datasource-nacos</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.ocean</groupId>
+                <artifactId>enhance-tp-datasource-consul</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.ocean</groupId>
+                <artifactId>enhance-tp-datasource-etcd</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.ocean</groupId>
+                <artifactId>enhance-tp-datasource-redis</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.ocean</groupId>
+                <artifactId>enhance-tp-datasource-zookeeper</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.ocean</groupId>
+                <artifactId>enhance-tp-spring-boot-starter</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.ocean</groupId>
+                <artifactId>enhance-tp-nacos-datasource-spring-boot-starter</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
 </project>

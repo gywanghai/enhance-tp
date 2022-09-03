@@ -17,6 +17,7 @@
         <module>enhance-tp-console</module>
         <module>enhance-tp-naming</module>
         <module>enhance-tp-config</module>
+        <module>enhance-tp-extension</module>
     </modules>
 
     <packaging>pom</packaging>
@@ -88,6 +89,12 @@
 
             <dependency>
                 <groupId>com.ocean</groupId>
+                <artifactId>enhance-tp-config</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.ocean</groupId>
                 <artifactId>enhance-tp-core</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -108,6 +115,24 @@
                 <groupId>io.micrometer</groupId>
                 <artifactId>micrometer-registry-prometheus</artifactId>
                 <version>${micrometer-registry-prometheus.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.ocean</groupId>
+                <artifactId>enhance-tp-core-spring-boot-starter</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.ocean</groupId>
+                <artifactId>enhance-tp-spring-boot-starter</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.ocean</groupId>
+                <artifactId>enhance-tp-nacos-datasource-spring-boot-starter</artifactId>
+                <version>${project.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

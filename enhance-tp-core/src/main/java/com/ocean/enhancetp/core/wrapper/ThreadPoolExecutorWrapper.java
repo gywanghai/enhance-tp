@@ -5,7 +5,7 @@ import cn.hutool.core.util.ClassUtil;
 import cn.hutool.core.util.ReflectUtil;
 import com.ocean.enhancetp.core.blockingqueue.ResizableLinkedBlockingQueue;
 import com.ocean.enhancetp.core.monitor.ThreadPoolExecutorMetrics;
-import com.ocean.enhancetp.core.properties.ThreadPoolExecutorProperties;
+import com.ocean.enhancetp.core.properties.ThreadPoolExecutorProperty;
 import lombok.Data;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +29,7 @@ import static java.lang.Integer.MAX_VALUE;
 @Slf4j
 public class ThreadPoolExecutorWrapper {
 
-    private ThreadPoolExecutorProperties properties;
+    private ThreadPoolExecutorProperty property;
 
     private ThreadPoolExecutor executor;
 
@@ -37,16 +37,16 @@ public class ThreadPoolExecutorWrapper {
 
     /**
      * 根据属性创建线程池装饰器
-     * @param properties
+     * @param property
      */
-    public ThreadPoolExecutorWrapper(ThreadPoolExecutorProperties properties) {
-        if(StringUtils.isEmpty(properties.getClassName())){
-            properties.setClassName(ThreadPoolExecutor.class.getName());
+    public ThreadPoolExecutorWrapper(ThreadPoolExecutorProperty property) {
+        if(StringUtils.isEmpty(property.getClassName())){
+            property.setClassName(ThreadPoolExecutor.class.getName());
         }
-        this.properties = properties;
-        buildThreadExecutor(properties);
+        this.property = property;
+        buildThreadExecutor(property);
 
-        initMetrics(properties.getThreadPoolId());
+        initMetrics(property.getThreadPoolId());
     }
 
     /**
@@ -56,15 +56,15 @@ public class ThreadPoolExecutorWrapper {
      */
     public ThreadPoolExecutorWrapper(ThreadPoolExecutor threadPoolExecutor, String threadPoolId){
         executor = threadPoolExecutor;
-        properties = new ThreadPoolExecutorProperties();
-        properties.setThreadPoolId(threadPoolId);
-        properties.setClassName(threadPoolExecutor.getClass().getName());
+        property = new ThreadPoolExecutorProperty();
+        property.setThreadPoolId(threadPoolId);
+        property.setClassName(threadPoolExecutor.getClass().getName());
 
         initProperties(threadPoolExecutor);
 
         initMetrics(threadPoolId);
 
-        executor.setRejectedExecutionHandler(new RejectedExecutionHandlerWrapper(executor.getRejectedExecutionHandler(), properties));
+        executor.setRejectedExecutionHandler(new RejectedExecutionHandlerWrapper(executor.getRejectedExecutionHandler(), property));
     }
 
     private void initMetrics(String threadPoolId) {
@@ -102,7 +102,7 @@ public class ThreadPoolExecutorWrapper {
      * @param threshold
      */
     public void setAlarmThreshold(String alarmType, Number threshold){
-        Map<String, Number> map = this.getProperties().getAlarmThreshold();
+        Map<String, Number> map = this.getProperty().getAlarmThreshold();
         if(map == null){
             map = new ConcurrentHashMap<>();
         }
@@ -113,7 +113,7 @@ public class ThreadPoolExecutorWrapper {
      * 根据线程池参数创建线程池
      * @param properties
      */
-    public void buildThreadExecutor(ThreadPoolExecutorProperties properties) {
+    public void buildThreadExecutor(ThreadPoolExecutorProperty properties) {
         String className = properties.getClassName();
         Class<?> clazz = ClassUtil.loadClass(className);
         if(clazz == ThreadPoolExecutor.class){
@@ -128,7 +128,7 @@ public class ThreadPoolExecutorWrapper {
      * 创建定时任务线程池
      * @param properties
      */
-    private void buildScheduledThreadPool(ThreadPoolExecutorProperties properties) {
+    private void buildScheduledThreadPool(ThreadPoolExecutorProperty properties) {
         String prefix = properties.getThreadPoolId() + "-";
         ThreadFactory threadFactory = new NamedThreadFactory(prefix, false);
         this.executor = new ScheduledThreadPoolExecutor(properties.getCorePoolSize(), threadFactory);
@@ -138,7 +138,7 @@ public class ThreadPoolExecutorWrapper {
      * 创建普通线程池
      * @param properties
      */
-    private void buildGeneralThreadPool(ThreadPoolExecutorProperties properties){
+    private void buildGeneralThreadPool(ThreadPoolExecutorProperty properties){
         int corePoolSize = properties.getCorePoolSize();
         int maximumPoolSize = properties.getMaximumPoolSize();
         long keepAliveTime = properties.getKeepAliveTime();
@@ -156,7 +156,7 @@ public class ThreadPoolExecutorWrapper {
         this.executor.allowCoreThreadTimeOut(properties.getAllowCoreThreadTimeOut());
     }
 
-    public RejectedExecutionHandler buildRejectedExecutionHandler(ThreadPoolExecutorProperties properties){
+    public RejectedExecutionHandler buildRejectedExecutionHandler(ThreadPoolExecutorProperty properties){
         String rejectedExecutionHandlerClassName = properties.getRejectedExecutionHandlerClassName();
         Class<Object> objectClass = ClassUtil.loadClass(rejectedExecutionHandlerClassName);
         RejectedExecutionHandler targetHandler = null;
@@ -168,7 +168,7 @@ public class ThreadPoolExecutorWrapper {
         return new RejectedExecutionHandlerWrapper(targetHandler, properties);
     }
 
-    public BlockingQueue buildBlockingQueue(ThreadPoolExecutorProperties properties)  {
+    public BlockingQueue buildBlockingQueue(ThreadPoolExecutorProperty properties)  {
         String workQueueClassName = properties.getWorkQueueClassName();
         Class<?> workQueueClass =  ClassUtil.loadClass(workQueueClassName);
         BlockingQueue workQueue = null;
@@ -190,11 +190,11 @@ public class ThreadPoolExecutorWrapper {
     }
 
     private void initProperties(ThreadPoolExecutor threadPoolExecutor) {
-        properties.setCorePoolSize(executor.getCorePoolSize());
-        properties.setAllowCoreThreadTimeOut(threadPoolExecutor.allowsCoreThreadTimeOut());
-        properties.setMaximumPoolSize(threadPoolExecutor.getMaximumPoolSize());
-        properties.setKeepAliveTime(threadPoolExecutor.getKeepAliveTime(TimeUnit.SECONDS));
-        properties.setWorkQueueClassName(threadPoolExecutor.getQueue().getClass().getName());
+        property.setCorePoolSize(executor.getCorePoolSize());
+        property.setAllowCoreThreadTimeOut(threadPoolExecutor.allowsCoreThreadTimeOut());
+        property.setMaximumPoolSize(threadPoolExecutor.getMaximumPoolSize());
+        property.setKeepAliveTime(threadPoolExecutor.getKeepAliveTime(TimeUnit.SECONDS));
+        property.setWorkQueueClassName(threadPoolExecutor.getQueue().getClass().getName());
 
         initWorkQueueProperties(threadPoolExecutor);
 
@@ -204,75 +204,75 @@ public class ThreadPoolExecutorWrapper {
     private void initRejectedExecutionHandlerProperties(ThreadPoolExecutor threadPoolExecutor) {
         RejectedExecutionHandler rejectedExecutionHandler = threadPoolExecutor.getRejectedExecutionHandler();
         if(rejectedExecutionHandler instanceof RejectedExecutionHandlerWrapper){
-            properties.setRejectedExecutionHandlerClassName(((RejectedExecutionHandlerWrapper) rejectedExecutionHandler).getRejectedExecutionHandler().getClass().getName());
+            property.setRejectedExecutionHandlerClassName(((RejectedExecutionHandlerWrapper) rejectedExecutionHandler).getRejectedExecutionHandler().getClass().getName());
         }
         else {
-            properties.setRejectedExecutionHandlerClassName(rejectedExecutionHandler.getClass().getName());
+            property.setRejectedExecutionHandlerClassName(rejectedExecutionHandler.getClass().getName());
         }
     }
 
     private void initWorkQueueProperties(ThreadPoolExecutor threadPoolExecutor) {
         if(threadPoolExecutor.getQueue() instanceof SynchronousQueue){
-            properties.setWorkQueueCapacity(0);
+            property.setWorkQueueCapacity(0);
         }
         if(threadPoolExecutor.getQueue() instanceof ArrayBlockingQueue){
             Object[] items = (Object[]) ReflectUtil.getFieldValue(threadPoolExecutor.getQueue(),"items");
-            properties.setWorkQueueCapacity(items.length);
+            property.setWorkQueueCapacity(items.length);
         }
         if(threadPoolExecutor.getQueue() instanceof LinkedBlockingQueue){
             Integer workQueueCapacity = (Integer) ReflectUtil.getFieldValue(threadPoolExecutor.getQueue(), "capacity");
-            properties.setWorkQueueCapacity(workQueueCapacity);
+            property.setWorkQueueCapacity(workQueueCapacity);
         }
         if(threadPoolExecutor.getQueue() instanceof DelayQueue){
-            properties.setWorkQueueCapacity(MAX_VALUE - 8);
+            property.setWorkQueueCapacity(MAX_VALUE - 8);
         }
         if(threadPoolExecutor.getQueue() instanceof PriorityBlockingQueue){
-            properties.setWorkQueueCapacity(MAX_VALUE - 8);
+            property.setWorkQueueCapacity(MAX_VALUE - 8);
         }
         if(threadPoolExecutor.getQueue() instanceof LinkedBlockingDeque){
             Integer workQueueCapacity = (Integer) ReflectUtil.getFieldValue(threadPoolExecutor.getQueue(), "capacity");
-            properties.setWorkQueueCapacity(workQueueCapacity);
+            property.setWorkQueueCapacity(workQueueCapacity);
         }
         if(threadPoolExecutor.getQueue() instanceof LinkedTransferQueue){
-            properties.setWorkQueueCapacity(MAX_VALUE);
+            property.setWorkQueueCapacity(MAX_VALUE);
         }
     }
 
     /**
      * 更新线程池参数
-     * @param threadPoolExecutorProperties
+     * @param threadPoolExecutorProperty
      */
-    public void update(ThreadPoolExecutorProperties threadPoolExecutorProperties){
-        if(threadPoolExecutorProperties.getMaximumPoolSize() < threadPoolExecutorProperties.getCorePoolSize()){
+    public void update(ThreadPoolExecutorProperty threadPoolExecutorProperty){
+        if(threadPoolExecutorProperty.getMaximumPoolSize() < threadPoolExecutorProperty.getCorePoolSize()){
             log.error("最大线程数不能小于核心线程数");
             return;
         }
-        if(threadPoolExecutorProperties.getCorePoolSize() != null){
-            executor.setCorePoolSize(threadPoolExecutorProperties.getCorePoolSize());
+        if(threadPoolExecutorProperty.getCorePoolSize() != null){
+            executor.setCorePoolSize(threadPoolExecutorProperty.getCorePoolSize());
         }
-        if(threadPoolExecutorProperties.getMaximumPoolSize() != null){
-            executor.setMaximumPoolSize(threadPoolExecutorProperties.getMaximumPoolSize());
+        if(threadPoolExecutorProperty.getMaximumPoolSize() != null){
+            executor.setMaximumPoolSize(threadPoolExecutorProperty.getMaximumPoolSize());
         }
-        if(threadPoolExecutorProperties.getKeepAliveTime() != null){
-            executor.setKeepAliveTime(threadPoolExecutorProperties.getKeepAliveTime(), TimeUnit.SECONDS);
+        if(threadPoolExecutorProperty.getKeepAliveTime() != null){
+            executor.setKeepAliveTime(threadPoolExecutorProperty.getKeepAliveTime(), TimeUnit.SECONDS);
         }
-        String prefix = threadPoolExecutorProperties.getThreadPoolId() + "-";
+        String prefix = threadPoolExecutorProperty.getThreadPoolId() + "-";
         executor.setThreadFactory(new NamedThreadFactory(prefix, false));
-        executor.allowCoreThreadTimeOut(threadPoolExecutorProperties.getAllowCoreThreadTimeOut());
-        updateRejectedExecutionHandler(threadPoolExecutorProperties);
+        executor.allowCoreThreadTimeOut(threadPoolExecutorProperty.getAllowCoreThreadTimeOut());
+        updateRejectedExecutionHandler(threadPoolExecutorProperty);
         if(executor.getQueue() instanceof ResizableLinkedBlockingQueue){
-            ((ResizableLinkedBlockingQueue<Runnable>) executor.getQueue()).setCapacity(threadPoolExecutorProperties.getWorkQueueCapacity());
+            ((ResizableLinkedBlockingQueue<Runnable>) executor.getQueue()).setCapacity(threadPoolExecutorProperty.getWorkQueueCapacity());
         }
-        this.properties = threadPoolExecutorProperties;
+        this.property = threadPoolExecutorProperty;
     }
 
-    private void updateRejectedExecutionHandler(ThreadPoolExecutorProperties threadPoolExecutorProperties) {
-        if(threadPoolExecutorProperties.getRejectedExecutionHandlerClassName() != null){
-            String className = threadPoolExecutorProperties.getRejectedExecutionHandlerClassName();
+    private void updateRejectedExecutionHandler(ThreadPoolExecutorProperty threadPoolExecutorProperty) {
+        if(threadPoolExecutorProperty.getRejectedExecutionHandlerClassName() != null){
+            String className = threadPoolExecutorProperty.getRejectedExecutionHandlerClassName();
             Class<?> rejectedExecutionHandlerClass = ClassUtil.loadClass(className);
             try {
                 RejectedExecutionHandler handler = (RejectedExecutionHandler) rejectedExecutionHandlerClass.newInstance();
-                executor.setRejectedExecutionHandler(new RejectedExecutionHandlerWrapper(handler, threadPoolExecutorProperties));
+                executor.setRejectedExecutionHandler(new RejectedExecutionHandlerWrapper(handler, threadPoolExecutorProperty));
             } catch (Exception e) {
                 log.error("设置 RejectedExecutionHandler 失败", e);
             }
@@ -280,12 +280,12 @@ public class ThreadPoolExecutorWrapper {
     }
 
     public void destory(){
-        if(null != properties){
-            properties = null;
+        if(null != property){
+            property = null;
         }
         if(executor != null){
             executor.shutdown();
-            log.error("线程池[{}]关闭", properties);
+            log.error("线程池[{}]关闭", property);
         }
     }
 

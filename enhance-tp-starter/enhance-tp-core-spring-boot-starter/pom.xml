@@ -25,8 +25,9 @@
 
         <dependency>
             <groupId>com.ocean</groupId>
-            <artifactId>enhance-tp-core</artifactId>
+            <artifactId>enhance-tp-spring-boot-starter</artifactId>
         </dependency>
 
     </dependencies>
+
 </project>

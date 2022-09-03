@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>enhance-tp</artifactId>
+        <groupId>com.ocean</groupId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>enhance-tp-extension</artifactId>
+    <packaging>pom</packaging>
+
+    <modules>
+        <module>enhance-tp-datasource-extension</module>
+        <module>enhance-tp-datasource-nacos</module>
+        <module>enhance-tp-datasource-zookeeper</module>
+        <module>enhance-tp-datasource-redis</module>
+        <module>enhance-tp-datasource-consul</module>
+        <module>enhance-tp-datasource-etcd</module>
+        <module>enhance-tp-datasource-apollo</module>
+    </modules>
+
+    <dependencyManagement>
+        <dependencies>
+
+            <dependency>
+                <groupId>com.ocean</groupId>
+                <artifactId>enhance-tp-datasource-extension</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.ocean</groupId>
+                <artifactId>enhance-tp-datasource-nacos</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.ocean</groupId>
+                <artifactId>enhance-tp-datasource-apollo</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.ocean</groupId>
+                <artifactId>enhance-tp-datasource-consul</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.ocean</groupId>
+                <artifactId>enhance-tp-datasource-zookeeper</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.ocean</groupId>
+                <artifactId>enhance-tp-datasource-etcd</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+        </dependencies>
+    </dependencyManagement>
+
+</project>

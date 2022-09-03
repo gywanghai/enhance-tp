@@ -44,13 +44,13 @@ public class SimpleThreadPoolExecutorMonitor implements ThreadPoolExecutorMonito
     public SimpleThreadPoolExecutorMonitor(ThreadPoolExecutorService threadPoolExecutorService, ThreadPoolExecutorAlarmer threadPoolExecutorAlarmer){
         this.threadPoolExecutorService = threadPoolExecutorService;
         this.threadPoolExecutorAlarmer = threadPoolExecutorAlarmer;
-        this.scheduledThreadPoolExecutor = new ScheduledThreadPoolExecutor(Runtime.getRuntime().availableProcessors(), new NamedThreadFactory("enhance-tp-monitor",false));
+        this.scheduledThreadPoolExecutor = new ScheduledThreadPoolExecutor(Runtime.getRuntime().availableProcessors(), new NamedThreadFactory("enhance-tp-monitor-",true));
     }
 
     @Override
     public void startMonitor() {
         if(monitor.compareAndSet(false, true)){
-            scheduledThreadPoolExecutor.submit(new MonitorTask());
+            scheduledThreadPoolExecutor.scheduleAtFixedRate(new MonitorTask(),0, 5, TimeUnit.SECONDS);
         }
     }
 
@@ -80,13 +80,16 @@ public class SimpleThreadPoolExecutorMonitor implements ThreadPoolExecutorMonito
     public class MonitorTask implements Runnable {
         @Override
         public void run() {
-            Collection<ThreadPoolExecutorWrapper> threadPoolExecutorWrappers = threadPoolExecutorService.getAllThreadPoolExecutorWrapper();
-            threadPoolExecutorWrappers.stream().forEach(threadPoolExecutorWrapper -> {
-               threadPoolExecutorWrapper.scrapeMetrics();
-               SimpleThreadPoolExecutorMonitor.this.monitor(threadPoolExecutorWrapper.getMetrics());
-               threadPoolExecutorAlarmer.alarm(threadPoolExecutorWrapper.getMetrics(), threadPoolExecutorWrapper.getProperties());
-            });
-            scheduledThreadPoolExecutor.schedule(this, 5, TimeUnit.SECONDS);
+            try{
+                Collection<ThreadPoolExecutorWrapper> threadPoolExecutorWrappers = threadPoolExecutorService.getAllThreadPoolExecutorWrapper();
+                threadPoolExecutorWrappers.stream().forEach(threadPoolExecutorWrapper -> {
+                    threadPoolExecutorWrapper.scrapeMetrics();
+                    SimpleThreadPoolExecutorMonitor.this.monitor(threadPoolExecutorWrapper.getMetrics());
+                    threadPoolExecutorAlarmer.alarm(threadPoolExecutorWrapper.getMetrics(), threadPoolExecutorWrapper.getProperty());
+                });
+            }catch (Exception e){
+                e.printStackTrace();
+            }
         }
     }
 }

@@ -5,7 +5,7 @@ import com.ocean.enhancetp.common.event.Event;
 import com.ocean.enhancetp.common.event.EventPublisher;
 import com.ocean.enhancetp.core.event.EventSource;
 import com.ocean.enhancetp.core.monitor.ThreadPoolExecutorMetrics;
-import com.ocean.enhancetp.core.properties.ThreadPoolExecutorProperties;
+import com.ocean.enhancetp.core.properties.ThreadPoolExecutorProperty;
 
 import java.util.Date;
 import java.util.List;
@@ -25,7 +25,7 @@ public abstract class AbstractThreadPoolExecutorAlarmer implements ThreadPoolExe
     }
 
     @Override
-    public void alarm(ThreadPoolExecutorMetrics threadPoolExecutorMetrics, ThreadPoolExecutorProperties properties) {
+    public void alarm(ThreadPoolExecutorMetrics threadPoolExecutorMetrics, ThreadPoolExecutorProperty properties) {
         List<AlarmInfo> alarmInfoList = checkMetrics(threadPoolExecutorMetrics, properties);
         if(alarmInfoList.isEmpty()){
             return;
@@ -42,5 +42,5 @@ public abstract class AbstractThreadPoolExecutorAlarmer implements ThreadPoolExe
      * @param threadPoolExecutorMetrics 线程池状态指标
      * @return
      */
-    public abstract List<AlarmInfo> checkMetrics(ThreadPoolExecutorMetrics threadPoolExecutorMetrics, ThreadPoolExecutorProperties properties);
+    public abstract List<AlarmInfo> checkMetrics(ThreadPoolExecutorMetrics threadPoolExecutorMetrics, ThreadPoolExecutorProperty properties);
 }

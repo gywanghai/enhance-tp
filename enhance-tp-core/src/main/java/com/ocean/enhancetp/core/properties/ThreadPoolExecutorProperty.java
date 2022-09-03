@@ -15,7 +15,7 @@ import java.util.concurrent.ThreadPoolExecutor;
  */
 @Data
 @ToString
-public class ThreadPoolExecutorProperties {
+public class ThreadPoolExecutorProperty {
     /**
      * 线程池 ID
      */
