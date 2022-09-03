@@ -37,7 +37,7 @@
         <hutool.version>5.8.3</hutool.version>
         <commons-lang3.version>3.12.0</commons-lang3.version>
         <lombok.version>1.18.24</lombok.version>
-        <guava.version>23.0</guava.version>
+        <guava.version>31.1-jre</guava.version>
         <micrometer-registry-prometheus.version>1.5.3</micrometer-registry-prometheus.version>
         <spring-cloud.version>Hoxton.SR9</spring-cloud.version>
         <spring-cloud-alibaba.version>2.2.6.RELEASE</spring-cloud-alibaba.version>
