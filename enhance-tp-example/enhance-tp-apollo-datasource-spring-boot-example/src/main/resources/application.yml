@@ -1,0 +1,27 @@
+server:
+  port: 9999
+
+management:
+  endpoints:
+    prometheus:
+      enable: true
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+
+
+spring:
+  application:
+    name: example
+  enhancetp:
+    datasource:
+#      nacos:
+#        server-addr: "${spring.cloud.nacos.config.server-addr}"
+#        groupId: DEFAULT_GROUP
+      apollo:
+        appId: enhance-tp-example
+        namespace: application
+        meta: http://192.168.9.150:8080

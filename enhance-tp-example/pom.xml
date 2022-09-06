@@ -13,7 +13,8 @@
     <packaging>pom</packaging>
     <modules>
         <module>enhance-tp-example-core</module>
-        <module>enhance-tp-spring-boot-example</module>
+        <module>enhance-tp-nacos-datasource-spring-boot-example</module>
+        <module>enhance-tp-apollo-datasource-spring-boot-example</module>
     </modules>
 
 </project>

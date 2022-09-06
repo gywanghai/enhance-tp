@@ -1,16 +1,17 @@
 package com.ocean.enhancetp.config.datasource;
 
 import com.ocean.enhancetp.common.property.YamlPropertyParser;
-import com.ocean.enhancetp.config.properties.NacosDataSourceProperties;
+import com.ocean.enhancetp.config.properties.ApolloDataSourceProperties;
 import com.ocean.enhancetp.autoconfig.EnhanceTpProperties;
 import com.ocean.enhancetp.core.properties.ThreadPoolExecutorProperty;
 import com.ocean.enhancetp.datasource.AbstractDataSource;
 import com.ocean.enhancetp.datasource.Converter;
-import com.ocean.enhancetp.datasource.nacos.NacosDataSource;
+import com.ocean.enhancetp.datasource.apollo.ApolloDataSource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 
 import java.util.Properties;
 
@@ -22,7 +23,7 @@ import java.util.Properties;
  */
 @Slf4j
 @Configuration
-public class NacosDataSourceConfiguration {
+public class ApolloDataSourceConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(Converter.class)
@@ -36,17 +37,12 @@ public class NacosDataSourceConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(AbstractDataSource.class)
-    public AbstractDataSource nacosDataSource(EnhanceTpProperties enhanceTpProperties){
-        NacosDataSourceProperties nacosDataSourceProperties = enhanceTpProperties.getDatasource().getNacos();
-        if(nacosDataSourceProperties == null){
-            throw new IllegalStateException("please config nacos datasource properties");
+    public AbstractDataSource apolloDataSource(EnhanceTpProperties enhanceTpProperties, Environment environment){
+        ApolloDataSourceProperties dataSourceProperties = enhanceTpProperties.getDatasource().getApollo();
+        String env = environment.getActiveProfiles().length == 0? "default" : environment.getActiveProfiles()[0];
+        if(dataSourceProperties == null){
+            throw new IllegalStateException("please config apollo datasource properties");
         }
-        String serverAddr = nacosDataSourceProperties.getServerAddr();
-        String groupId = nacosDataSourceProperties.getGroupId();
-        Properties properties = new Properties();
-        properties.put("serverAddr", nacosDataSourceProperties.getServerAddr());
-        properties.put("namespace", "");
-        return new NacosDataSource(serverAddr, groupId, parser());
+        return new ApolloDataSource(dataSourceProperties.getAppId(),dataSourceProperties.getNamespace(), env, dataSourceProperties.getMeta(), parser());
     }
-
 }

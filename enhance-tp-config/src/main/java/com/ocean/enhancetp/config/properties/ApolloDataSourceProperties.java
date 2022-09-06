@@ -15,7 +15,11 @@ import lombok.ToString;
 @ToString
 public class ApolloDataSourceProperties extends AbstractDataSourceProperties {
 
+    private String appId;
+
     private String namespace;
+
+    private String meta;
 
     private String dataId;
 

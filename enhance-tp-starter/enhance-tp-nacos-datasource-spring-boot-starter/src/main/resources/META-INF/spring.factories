@@ -1,1 +1,3 @@
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=com.ocean.enhancetp.config.datasource.NacosDataSourceAutoConfiguration
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+com.ocean.enhancetp.config.datasource.NacosDataSourceAutoConfiguration
+

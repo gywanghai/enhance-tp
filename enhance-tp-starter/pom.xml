@@ -14,9 +14,9 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>enhance-tp-core-spring-boot-starter</module>
         <module>enhance-tp-spring-boot-starter</module>
         <module>enhance-tp-nacos-datasource-spring-boot-starter</module>
+        <module>enhance-tp-apollo-datasource-spring-boot-starter</module>
     </modules>
 
     <dependencyManagement>
@@ -72,6 +72,12 @@
             <dependency>
                 <groupId>com.ocean</groupId>
                 <artifactId>enhance-tp-nacos-datasource-spring-boot-starter</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.ocean</groupId>
+                <artifactId>enhance-tp-apollo-datasource-spring-boot-starter</artifactId>
                 <version>${project.version}</version>
             </dependency>
         </dependencies>

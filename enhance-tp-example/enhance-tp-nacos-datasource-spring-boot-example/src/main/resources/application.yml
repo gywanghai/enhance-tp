@@ -1,0 +1,13 @@
+server:
+  port: 9999
+
+management:
+  endpoints:
+    prometheus:
+      enable: true
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always

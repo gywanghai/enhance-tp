@@ -1,5 +1,6 @@
 package com.ocean.enhancetp.datasource;
 
+import com.google.common.base.Preconditions;
 import com.ocean.enhancetp.config.*;
 import com.ocean.enhancetp.config.listener.PropertyListener;
 import org.apache.commons.lang3.StringUtils;
@@ -55,14 +56,15 @@ public abstract class AbstractDataSource<S, T> implements ReadableDataSource<S, 
 
     @Override
     public T loadConfig(String dataId)  {
-        propertyMap.computeIfAbsent(dataId, s -> {
-            DynamicProperty dynamicProperty = new DynamicProperty();
-            dynamicProperty.setDataId(dataId);
-            dynamicProperty.addListener(AbstractDataSource.this);
-            return dynamicProperty;
-        });
         T value = convert(readSource(dataId));
         if(value != null){
+            propertyMap.computeIfAbsent(dataId, s -> {
+                DynamicProperty dynamicProperty = new DynamicProperty();
+                dynamicProperty.setDataId(dataId);
+                dynamicProperty.setValue(value);
+                dynamicProperty.addListener(AbstractDataSource.this);
+                return dynamicProperty;
+            });
             getProperty(dataId).updateValue(value);
         }
         return value;
@@ -90,6 +92,7 @@ public abstract class AbstractDataSource<S, T> implements ReadableDataSource<S, 
     protected String getFormatDataId(String originId){
         String application = environment.getProperty("spring.application.name");
         String profile = environment.getActiveProfiles().length == 0? "default" : environment.getActiveProfiles()[0];
+        Preconditions.checkArgument(StringUtils.isNotBlank(application), "application name must not be null");
         return dataIdGenerator.generator(application, profile, originId);
     }
 }

@@ -33,8 +33,11 @@ public class ApolloDataSource<T> extends AbstractDataSource<String, T> {
 
     private final Map<String, ConfigChangeListener> configChangeListenerMap = new ConcurrentHashMap<>();
 
-    public ApolloDataSource(String namespace, Converter<String, T> parser) {
+    public ApolloDataSource(String appId, String namespace, String env, String meta,Converter<String, T> parser) {
         super(parser);
+        System.setProperty("apollo.meta", meta);
+        System.setProperty("app.id", appId);
+        System.setProperty("env", env);
         Preconditions.checkArgument(StringUtils.isNotBlank(namespace), "namespace could not be null or empty");
 
         this.config = ConfigService.getConfig(namespace);
@@ -62,15 +65,15 @@ public class ApolloDataSource<T> extends AbstractDataSource<String, T> {
     public String readSource(String dataId) {
         configChangeListenerMap.computeIfAbsent(dataId, s -> {
             ConfigChangeListener changeListener = changeEvent -> {
-                ConfigChange change = changeEvent.getChange(dataId);
+                ConfigChange change = changeEvent.getChange(getFormatDataId(dataId));
                 if(change != null){
                     loadAndUpdateRules(dataId);
                 }
             };
-            config.addChangeListener(changeListener);
+            config.addChangeListener(changeListener, Sets.newHashSet(getFormatDataId(dataId)));
             return changeListener;
         });
-        return config.getProperty(dataId, "");
+        return config.getProperty(getFormatDataId(dataId), "");
     }
 
     @Override
